@@ -1,0 +1,4380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abhitech Energycon Limited</title>
+    <link rel="icon" href="images/abhitech-logo.png">
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script> 
+    <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>   
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+
+
+<style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-size: large;
+            font-family: Arial, sans-serif;
+        }
+
+
+        .content {
+            margin-top: 90px; /* Space below navbar */
+            padding: 10px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            height: auto;
+        }
+
+        .left-container, .right-container {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            border-radius: 4px;
+            flex-direction: column;
+            position: relative;
+            padding: 1rem;
+        }
+        
+        .blend-row {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .blend {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+            width: 100%;
+        }
+        
+        .blend select, .blend-entry select, .blend input, .blend-entry input {
+            flex: 2;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        
+        button {
+            padding: 8px 12px;
+            cursor: pointer;
+            border: none;
+            background-color: #02008a;
+            color: white;
+            border-radius: 5px;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        #weightedAverageProperties {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+        
+        /* Table Header */
+        table th {
+            background: #0153ac;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 16px;
+            border: 1px solid #ddd;
+        }
+        
+        /* Table Rows */
+        table td {
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            color: #333;
+        }
+        
+        /* Alternate Row Background */
+        table tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+        
+        /* Hover Effect */
+        table tr:hover {
+            background: #d4e6ff;
+        }
+        
+        
+        /* Light blue background for table headers */
+        th[colspan="3"] {
+            background-color: rgb(24, 0, 158);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 30%;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        
+        .close {
+            font-size: 30px;
+            cursor: pointer;
+            font-weight: bolder;
+        }
+        
+        .blendedcoalProperties {
+            overflow-x: auto;
+            margin-top: 10px;
+            white-space: nowrap;
+            padding: 10px;
+        }
+        
+        .blendedcoalProperties p {
+            display: inline-block;
+            margin-right: 20px;
+            padding: 5px;
+            border: 1px solid #ccc;
+        }
+        
+        .blendedcoalProperties::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        .blendedcoalProperties::-webkit-scrollbar-thumb {
+            background-color: #888;
+            border-radius: 5px;
+        }
+        
+        .blendedcoalProperties::-webkit-scrollbar-track {
+            background-color: #f1f1f1;
+        }
+        
+        .blend .remove-blend-btn, .blend-entry .remove-blend-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .blend .remove-blend-btn:hover, .blend-entry .remove-blend-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .add-blend-btn {
+            padding: 8px 12px;
+            cursor: pointer;
+            border: none;
+            width: 20%;
+            margin-left: 40%;
+            background-color: #02008a;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            color: white;
+            border-radius: 5px;
+        }
+        
+        .calculate-properties-btn{
+            padding: 8px 12px;
+            cursor: pointer;
+            border: none;
+            background-color: #02008a;
+            width: 30%;
+            margin-left: 35%;
+            margin-top: 20px;
+            color: white;
+            border-radius: 5px;
+        }
+
+        .blendProperties {
+            padding: 8px 12px;
+            cursor: pointer;
+            border: none;
+            background-color: #02008a;
+            width: 45%;
+            margin-left: 27%;
+            margin-top: 20px;
+            color: white;
+            border-radius: 5px;
+        }
+        
+        #totalRangeContainer {
+            text-align: center; 
+        }
+        
+        #totalRange {
+            font-weight: bold; 
+            margin-left: 5px;   
+        }
+
+        .right-container > table {
+            margin-bottom: 30px; 
+        }
+
+            /* Checkbox Card */
+        .checkbox-card {
+            width: 94%;
+            background-color: #f8f9fa;
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            margin-top: 15px;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .checkbox-card h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .toggle-icon {
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        /* Collapsible Checkbox Section */
+        .checkbox-container {
+            width: 95%;
+            background-color: #ffffff;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+            display: none; /* Initially hidden */
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-table td {
+            padding: 8px;
+        }
+
+        /* Hidden class for smooth collapse */
+        .hidden {
+            display: none;
+        }
+        #plot-section {
+            width: 100%;
+            display: flex;
+            padding-left: 25px;
+            align-items: center; 
+            flex-direction: column;
+            
+        }
+        #ternary-plot {
+            width: 100%;
+            max-height: 500px; /* Keeps it within a reasonable size */
+            padding-top: 10px;
+            
+        }
+        .navbar .logout-btn {
+  padding: 10px 16px;
+  background-color: red !important;
+  color: #fff !important;
+  border: none;
+  cursor: pointer;
+  border-radius: 25px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.navbar .logout-btn:hover {
+  background-color: darkred !important;
+}
+        /* Icon button styles */
+.icon-btn {
+  position: absolute;
+  top: 90px;        /* a little lower below navbar */
+  right: 20px;      /* align on right side */
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #1f2937;   /* same as navbar buttons */
+  transition: color 0.2s ease;
+  z-index: 1000;    /* ensure it stays on top */
+}
+
+.icon-btn:hover {
+  color: #000;      /* only color change, no resize */
+}
+
+/* Tooltip styling */
+.icon-btn::after {
+  content: attr(title);
+  position: absolute;
+  top: 120%;             /* place directly below icon */
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111;      /* black box */
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 4px 6px;
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+/* Show tooltip on hover */
+.icon-btn:hover::after {
+  opacity: 1;
+}
+/* ---------------------------
+  Add-on: Left-align after checkbox + modern checkbox visuals
+  Append this to the end of your existing <style> block
+   --------------------------- */
+
+/* Ensure checkbox cell has relative positioning for the custom checkmark */
+.checkbox-table td:first-child { position: relative; }
+
+/* 1) Left-align the description column (text immediately after checkbox) */
+.checkbox-table td:nth-child(2) {
+  text-align: left;            /* key: left align description */
+  padding: 12px 14px;         /* slightly larger padding for breathing room */
+  vertical-align: middle;
+  color: #0b1a2b;             /* dark readable color */
+  font-weight: 500;           /* medium weight for better hierarchy */
+  line-height: 1.35;
+  white-space: normal;        /* allow wrapping */
+}
+
+/* 2) Modern checkbox visuals (works even if default appearance removed) */
+.checkbox-table input[type="checkbox"]{
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  display: inline-block;
+  vertical-align: middle;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 2px solid rgba(2,0,138,0.18); /* subtle blue border */
+  background: #fff;
+  position: relative;
+  transition: all .12s ease;
+  box-sizing: border-box;
+}
+
+/* focus - accessible outline */
+.checkbox-table input[type="checkbox"]:focus{
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(2,0,138,0.10);
+  border-color: rgba(1,28,187,0.35);
+}
+
+/* checked state: blue gradient background + no border */
+.checkbox-table input[type="checkbox"]:checked{
+  background: linear-gradient(180deg, #001cbb, #02008a);
+  border-color: transparent;
+}
+
+/* custom white checkmark using pseudo-element */
+.checkbox-table input[type="checkbox"]::after{
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transform-origin: center;
+  transition: transform .12s ease;
+  pointer-events: none;
+}
+
+/* reveal checkmark when checked */
+.checkbox-table input[type="checkbox"]:checked::after{
+  transform: rotate(45deg) scale(1);
+}
+
+/* small hover affordance */
+.checkbox-table input[type="checkbox"]:hover{
+  transform: translateY(-1px);
+}
+
+
+
+        
+</style>
+<style>
+    /* PREMIUM UI - paste after existing CSS to override */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+:root{
+  --bg-1: #f4f7fb;
+  --bg-2: #ffffff;
+  --nav-blue-1: #001cbb;
+  --nav-blue-2: #02008a;
+  --muted: #6b7280;
+  --card-shadow: 0 10px 30px rgba(11,23,47,0.06);
+  --card-border: rgba(2,0,138,0.06);
+  --radius-lg: 12px;
+  --radius-md: 8px;
+  --accent: #ff7a59; /* warm accent if needed */
+}
+
+/* Typography + page background */
+html,body{
+  height:100%;
+}
+body{
+  margin:0;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  font-size:14px;
+  color: #0b1a2b;
+  background: linear-gradient(180deg, var(--bg-1) 0%, #fbfcff 60%);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* NAVBAR - visually elevated but same position */
+.navbar{
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,251,255,0.85));
+  height:72px;
+  padding:12px 24px;
+  align-items:center;
+  box-shadow: 0 6px 18px rgba(11,23,47,0.06);
+  border-bottom: 1px solid rgba(11,23,47,0.04);
+  backdrop-filter: blur(4px);
+}
+
+/* logo & title */
+.navbar img{ height:48px; object-fit:contain; margin-right:12px; }
+.navbar h1{
+  font-size:18px; color:var(--nav-blue-2); font-weight:700;
+  margin:0;
+  letter-spacing:0.2px;
+}
+
+/* nav buttons (pill style) */
+.nav-buttons button{
+  padding:8px 14px;
+  border-radius:999px;
+  border: none;
+  margin-left:8px;
+  font-weight:600;
+  background: linear-gradient(180deg, var(--nav-blue-1), var(--nav-blue-2));
+  color:#fff;
+  box-shadow: 0 8px 20px rgba(2,0,138,0.07);
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s;
+}
+.nav-buttons button:hover{ transform: translateY(-3px); box-shadow: 0 12px 30px rgba(2,0,138,0.09); }
+.nav-buttons .logout-btn{ background: linear-gradient(180deg,#ff4b4b,#e32d2d); box-shadow: 0 6px 18px rgba(227,45,45,0.08); }
+
+/* content containers (cards) - same widths/positioning preserved */
+.content{ margin-top:92px; padding:18px; display:flex; gap:18px; }
+.left-container, .right-container{
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,250,255,0.9));
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  padding:18px;
+  flex:1;
+  min-width:0; /* prevents overflow */
+}
+
+/* blend rows and controls */
+.blend-row{ display:flex; flex-direction:column; gap:12px; }
+.blend{ display:flex; gap:12px; align-items:center; width:100%; }
+.blend label{ min-width:42px; color:var(--muted); font-weight:600; }
+
+/* inputs & selects - premium fields */
+.blend select, .blend-entry select, .blend input, .blend-entry input{
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid rgba(11,23,47,0.06);
+  box-shadow: inset 0 2px 6px rgba(11,23,47,0.02);
+  background: #fff;
+  font-size:14px;
+  transition: box-shadow .12s, transform .08s;
+  outline: none;
+}
+.blend select:focus, .blend input:focus, .blend-entry input:focus{
+  box-shadow: 0 6px 18px rgba(2,0,138,0.08);
+  transform: translateY(-2px);
+  border-color: rgba(2,0,138,0.12);
+}
+
+/* primary buttons */
+button, .add-blend-btn, .calculate-properties-btn, .blendProperties{
+  cursor:pointer;
+  border-radius:12px;
+  font-weight:700;
+  letter-spacing:0.2px;
+}
+.add-blend-btn{ width:180px; margin:20px auto; display:block; }
+.calculate-properties-btn{ width:220px; margin:8px auto 0; display:block; }
+
+/* tables - modern / compact */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:transparent;
+  border-radius:8px;
+  overflow:hidden;
+  box-shadow:none;
+}
+table thead th{
+  background: linear-gradient(180deg, #071a52, #0b2a7a);
+  color:#fff; font-size:13px; font-weight:700; padding:10px 12px;
+  text-transform:uppercase; letter-spacing:0.6px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+table tbody td{
+  background: #fff; padding:10px 12px; color:#243447; font-size:13px;
+  border-bottom: 1px solid rgba(11,23,47,0.04);
+}
+table tr:nth-child(even) td{ background:#fbfcff; }
+table tr:hover td{ transform:translateY(-1px); background: #f0f6ff; }
+
+/* modal - centered + blur backdrop */
+/* REPLACE your existing .modal block with this */
+.modal {
+  display: none;               /* hidden by default */
+  position: fixed;
+  inset: 0;                    /* top:0; left:0; right:0; bottom:0 */
+  z-index: 1200;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6,18,28,0.4);
+  backdrop-filter: blur(6px) saturate(1.02);
+}
+
+/* show the modal only when JS adds the .show class */
+.modal.show {
+  display: flex;
+}
+
+.modal-content{
+  width: min(720px, 92%);
+  background: linear-gradient(180deg,#fff,#fbfbff);
+  padding:18px; border-radius:14px;
+  box-shadow: 0 30px 80px rgba(11,23,47,0.12);
+  border: 1px solid rgba(11,23,47,0.04);
+}
+
+/* small helpers */
+.icon-btn{ top:88px; right:22px; font-size:18px; background:transparent; }
+.checkbox-card{ border-radius:12px; padding:14px 16px; background:#fff; border:1px solid rgba(11,23,47,0.04); box-shadow:var(--card-shadow); }
+.blendedcoalProperties p{ background:#f7f9ff; border-radius:8px; padding:6px 10px; }
+
+/* responsive */
+@media (max-width:900px){
+  .content{ flex-direction:column; gap:12px; padding:12px; }
+  .nav-buttons button{ padding:8px 10px; font-size:13px; }
+  .navbar img{ height:40px; }
+}
+
+.control-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+.control-title {
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.control-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.primary-btn {
+  background: #2563eb;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 6px;
+}
+
+.secondary-btn {
+  background: #e5e7eb;
+  padding: 8px 14px;
+  border-radius: 6px;
+}
+
+/* ---------- Control card improvements ---------- */
+.control-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 18px;
+  box-shadow: 0 6px 18px rgba(11,23,47,0.06);
+  border: 1px solid rgba(11,23,47,0.04);
+  max-width: 760px;            /* keep card visually contained */
+}
+
+/* title */
+.control-title {
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #071a52;
+  font-size: 16px;
+}
+
+/* row layout: actions vs date row */
+.control-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  align-items: center;
+  flex-wrap: wrap;             /* wrap for narrow screens */
+}
+
+/* align action buttons to the left; allow space for extra items */
+.row--actions { justify-content: flex-start; }
+
+/* date row: label + select */
+.row--date { align-items: center; }
+
+/* label */
+.control-label {
+  min-width: 52px;
+  color: #374151;
+  font-weight: 600;
+}
+
+/* unified form controls: buttons + select share height + radius */
+.primary-btn, .secondary-btn, .control-select {
+  height: 40px;
+  line-height: 40px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(11,23,47,0.06);
+  font-weight: 600;
+  font-size: 14px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* primary */
+.primary-btn {
+  background: linear-gradient(180deg,#0b2a7a,#2563eb);
+  color: #fff;
+  border: 1px solid rgba(2,0,138,0.12);
+  cursor: pointer;
+  box-shadow: 0 8px 26px rgba(2,0,138,0.06);
+}
+
+/* secondary (download template) */
+.secondary-btn {
+  background: #f3f4f6;
+  color: #0b1a2b;
+  cursor: pointer;
+}
+
+/* select styling */
+.control-select {
+  min-width: 210px;
+  padding-left: 12px;
+  padding-right: 36px; /* space for native caret */
+  background: #fff;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #6b7280 50%),
+                    linear-gradient(135deg, #6b7280 50%, transparent 50%);
+  background-position: calc(100% - 14px) calc(1em + 2px), calc(100% - 9px) calc(1em + 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+/* small screens: stack nicely */
+@media (max-width: 640px) {
+  .control-card { padding: 12px; }
+  .control-row { gap: 8px; }
+  .control-select { min-width: 160px; width: 100%; }
+  .row--actions { gap: 8px; }
+  .primary-btn, .secondary-btn { height: 44px; width: auto; flex: 1 1 auto; }
+}
+
+.primary-btn,
+.secondary-btn {
+  height: 36px;                 /* was 40 */
+  padding: 0 12px;              /* was 14 */
+  border-radius: 7px;           /* slightly tighter */
+  font-size: 13.5px;
+}
+.control-select {
+  height: 36px;
+  min-width: 190px;
+  padding: 0 34px 0 10px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #111827;
+
+  border: 1px solid #d1d5db;
+  background-color: #fff;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-image:
+    linear-gradient(45deg, transparent 50%, #6b7280 50%),
+    linear-gradient(135deg, #6b7280 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) 50%,
+    calc(100% - 11px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+}
+
+/* hover + focus polish */
+.control-select:hover {
+  border-color: #9ca3af;
+}
+
+.control-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+}
+.control-label {
+  font-size: 13px;
+  color: #374151;
+  margin-right: 4px;
+}
+
+
+
+
+</style>
+
+
+<!-- <style>
+/* Cleaned style — only minimal, safe visual improvements requested */
+
+/* Import modern font but keep original sizing intent */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+body {
+    margin: 0;
+    padding: 0;
+    font-size: large;                /* preserved */
+    font-family: "Inter", Arial, sans-serif;  /* improved font only */
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+}
+
+/* Navbar Styling (kept identical structure, color intent preserved) */
+.navbar {
+    width: 100%;
+    background-color: #f7f8fa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    color: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 65px;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.navbar img {
+    height: 95px;
+    margin-right: 10px;
+    margin-left: 0px;
+    object-fit: contain;
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 10px; /* Use 'gap' for spacing between flex items */
+    margin-right: 20px;
+}
+
+.navbar h1 {
+    margin-left: 0px;
+    font-size: 25px; /* Adjust font size as needed */
+    color: #02008a;
+    font-weight: 600;
+}
+
+/* navbar buttons — improved visuals but same placement/margins */
+.navbar button {
+    padding: 10px 15px;
+    background: linear-gradient(180deg,#001cbb,#02008a);
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;            /* preserved */
+    margin-right: 20px;
+    font-weight: bold;
+    box-shadow: 0 6px 18px rgba(2,8,138,0.08);
+    transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+}
+.navbar button:hover {
+    background: linear-gradient(180deg,#0026e0,#001a8a);
+    transform: translateY(-2px);
+}
+
+/* Layout wrapper — unchanged */
+.content {
+    margin-top: 90px; /* Space below navbar */
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    height: auto;
+}
+
+/* Keep container widths/padding exactly as before */
+.left-container, .right-container {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    border-radius: 4px;
+    flex-direction: column;
+    position: relative;
+    padding: 1rem;
+    background: #fff;
+}
+
+/* Blend rows / input styling left mostly intact (only subtle smoothing) */
+.blend-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.blend {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px;
+    width: 100%;
+}
+
+.blend select, .blend-entry select, .blend input, .blend-entry input {
+    flex: 2;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+/* Buttons — preserved sizes/margins but improved visuals and hover */
+button {
+    padding: 8px 12px;
+    cursor: pointer;
+    border: none;
+    background: linear-gradient(180deg,#001cbb,#02008a);
+    color: white;
+    border-radius: 5px; /* preserved */
+    box-shadow: 0 6px 18px rgba(2,8,138,0.08);
+    transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    font-weight: 600;
+}
+
+.nav-buttons .logout-btn{
+    background: red;
+}
+
+.remove-blend-btn{
+  background: red;
+}
+
+button:hover {
+    background: linear-gradient(180deg,#0026e0,#001a8a);
+    transform: translateY(-2px);
+}
+
+/* preserve hidden-weighted area */
+#weightedAverageProperties {
+    display: none;
+    margin-top: 20px;
+}
+
+/* Tables — preserved */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+
+/* Table Header */
+table th {
+    background: #0153ac;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    font-family: "Inter", Arial, sans-serif;
+    font-weight: 600;
+}
+
+/* Table Rows */
+table td {
+    padding: 10px;
+    text-align: center;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    color: #333;
+}
+
+/* Alternate Row Background */
+table tr:nth-child(even) {
+    background: #f2f2f2;
+}
+
+/* Hover Effect */
+table tr:hover {
+    background: #d4e6ff;
+}
+
+/* Light blue background for specific header */
+th[colspan="3"] {
+    background-color: rgb(24, 0, 158);
+}
+
+/* Modal / blended coal properties preserved */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 30%;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.close {
+    font-size: 30px;
+    cursor: pointer;
+    font-weight: bolder;
+}
+
+.blendedcoalProperties {
+    overflow-x: auto;
+    margin-top: 10px;
+    white-space: nowrap;
+    padding: 10px;
+}
+
+.blendedcoalProperties p {
+    display: inline-block;
+    margin-right: 20px;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+
+/* scrollbars preserved */
+.blendedcoalProperties::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+.blendedcoalProperties::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 5px;
+}
+.blendedcoalProperties::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+}
+
+/* Remove buttons (kept same sizes, nicer visuals) */
+.blend .remove-blend-btn, .blend-entry .remove-blend-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 8px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s, transform .1s;
+    box-shadow: 0 6px 14px rgba(231,76,60,0.08);
+}
+.blend .remove-blend-btn:hover, .blend-entry .remove-blend-btn:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+}
+
+/* ========== Stack Add & Calculate buttons safely ==========
+   Keep their original width percentages and margins but make them block-centered
+   so they stack vertically without changing other layout widths.
+*/
+.add-blend-btn {
+    padding: 8px 12px;
+    cursor: pointer;
+    border: none;
+    width: 20%;              /* preserved */
+    background: linear-gradient(180deg,#001cbb,#02008a);
+    margin: 20px auto 10px;  /* center and stack (was margin-left:40%) */
+    color: white;
+    border-radius: 5px;      /* preserved */
+    display: block;          /* stack */
+    box-shadow: 0 6px 18px rgba(2,8,138,0.08);
+}
+
+.calculate-properties-btn {
+    padding: 8px 12px;
+    cursor: pointer;
+    border: none;
+    background: linear-gradient(180deg,#001cbb,#02008a);
+    width: 30%;              /* preserved */
+    margin: 10px auto 20px;  /* center and stack (was margin-left:35%) */
+    color: white;
+    border-radius: 5px;
+    display: block;          /* stack */
+    box-shadow: 0 6px 18px rgba(2,8,138,0.08);
+}
+
+/* keep blendProperties as originally placed unless used elsewhere */
+.blendProperties {
+    padding: 8px 12px;
+    cursor: pointer;
+    border: none;
+    background-color: #02008a;
+    width: 45%;
+    margin-left: 27%;
+    margin-top: 20px;
+    color: white;
+    border-radius: 5px;
+}
+
+/* total range container preserved */
+#totalRangeContainer {
+    text-align: center;
+}
+
+#totalRange {
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+/* right-container spacing preserved */
+.right-container > table {
+    margin-bottom: 30px;
+}
+
+/* Checkbox Card (preserved look, only left-align description + modern checkbox) */
+.checkbox-card {
+    width: 94%;
+    background-color: #f8f9fa;
+    padding: 12px 16px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    margin-top: 15px;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.checkbox-card h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+/* Collapsible Checkbox Section (preserved) */
+.checkbox-container {
+    width: 95%;
+    background-color: #ffffff;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 10px;
+    font-weight: bold;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+    display: none; /* Initially hidden */
+    transition: all 0.3s ease;
+}
+
+.checkbox-table td {
+    padding: 8px;
+}
+
+/* ------- Left-align after checkbox + conservative modern checkbox visuals ------- */
+.checkbox-table td:first-child { position: relative; }
+
+/* Left align the description immediately after checkbox (requested) */
+.checkbox-table td:nth-child(2) {
+  text-align: left;
+  padding: 12px 14px;
+  vertical-align: middle;
+  color: #0b1a2b;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+/* Modern checkbox (keeps size/spacing similar to before but nicer look) */
+.checkbox-table input[type="checkbox"]{
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  display: inline-block;
+  vertical-align: middle;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 2px solid rgba(2,0,138,0.18);
+  background: #fff;
+  position: relative;
+  transition: all .12s ease;
+  box-sizing: border-box;
+}
+.checkbox-table input[type="checkbox"]:focus{
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(2,0,138,0.10);
+  border-color: rgba(1,28,187,0.35);
+}
+.checkbox-table input[type="checkbox"]:checked{
+  background: linear-gradient(180deg, #001cbb, #02008a);
+  border-color: transparent;
+}
+.checkbox-table input[type="checkbox"]::after{
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transform-origin: center;
+  transition: transform .12s ease;
+  pointer-events: none;
+}
+.checkbox-table input[type="checkbox"]:checked::after{
+  transform: rotate(45deg) scale(1);
+}
+.checkbox-table input[type="checkbox"]:hover{
+  transform: translateY(-1px);
+}
+
+/* Plot and ternary sections preserved */
+#plot-section {
+    width: 100%;
+    display: flex;
+    padding-left: 25px;
+    align-items: center;
+    flex-direction: column;
+}
+#ternary-plot {
+    width: 100%;
+    max-height: 500px;
+    padding-top: 10px;
+}
+
+/* Logout button preserved */
+.navbar .logout-btn {
+    padding: 10px 16px;
+    background-color: red !important;
+    color: #fff !important;
+    border: none;
+    cursor: pointer;
+    border-radius: 25px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+.navbar .logout-btn:hover {
+    background-color: darkred !important;
+}
+
+/* icon button + tooltip preserved */
+.icon-btn {
+    position: absolute;
+    top: 90px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #1f2937;
+    transition: color 0.2s ease;
+    z-index: 1000;
+}
+.icon-btn:hover { color: #000; }
+.icon-btn::after {
+    content: attr(title);
+    position: absolute;
+    top: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #111;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 4px 6px;
+    border-radius: 4px;
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+    transition: opacity 0.2s ease;
+}
+.icon-btn:hover::after {
+    opacity: 1;
+}
+
+/* Responsive small tweaks only — keep widths same */
+@media (max-width: 900px) {
+    .content { flex-direction: column; }
+    .navbar img { height: 72px; }
+    .add-blend-btn, .calculate-properties-btn { width: 90%; margin-left: auto; margin-right: auto; display: block; }
+    table th, table td { font-size: 13px; padding: 8px; }
+    .modal-content { width: 90%; }
+}
+</style> -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+if(localStorage.getItem('isLoggedIn') !== 'true') {
+    alert('You must login first!');
+    window.location.href = './login.html'; 
+} else {
+    document.body.style.display = 'block';
+}
+         function logoutUser() {
+  localStorage.setItem('isLoggedIn', 'false'); 
+  window.location.href = './login.html'; 
+} 
+
+document.getElementById('dateSelect').disabled = true;
+
+document.getElementById('excelFileInput').addEventListener('change', () => {
+  document.getElementById('dateSelect').disabled = false;
+});
+
+</script>
+</head>
+<body>
+    
+    <button id="downloadPDF" class="icon-btn" title="Download page as PDF">⬇️</button>
+    
+    <div class="content">
+        
+    <div class="left-container">
+        <div class="control-card">
+  <div class="control-title">Coal Data Source</div>
+
+  <div class="control-row">
+    <button id="uploadBtn" class="primary-btn">Upload Excel</button>
+    <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none" />
+
+    <button id="templateBtn" class="secondary-btn">Download Template</button>
+  </div>
+
+  <div class="control-row">
+    <label>Date</label>
+    <select id="dateSelect" class="control-select"></select>
+  </div>
+  <!-- ===== Add these controls next to your Date select (place inside the same control-card) ===== -->
+<div class="control-row" style="margin-top:8px; align-items:center;">
+  <label class="control-label">Range</label>
+  <select id="rangeStart" class="control-select"></select>
+  <select id="rangeEnd" class="control-select" style="margin-left:6px"></select>
+  <button id="runRangeBtn" class="primary-btn" style="margin-left:8px">Simulate Range</button>
+</div>
+
+
+  <div id="uploadStatus" class="helper-text"></div>
+</div>
+
+        <form id="coalForm">
+            <div id="coalBlends">
+                <h2>Coal Type</h2>
+                <div class="blend-row"></div>
+                </div>
+                <button type="button" class="add-blend-btn" onclick="addBlend()">Add Coal</button>
+                <div id="totalRangeContainer">
+                    <label>Total Current Range:<span id="totalRange"></span>%</label>        
+                </div>
+                 
+  
+                <div class="checkbox-card" id="checkboxCard">
+                    <h3>Operational Parameters</h3>
+                    
+                </div>
+            
+                <!-- Collapsible Checkbox Section -->
+                <div class="checkbox-container hidden" id="checkboxContainer">
+                    <table class="checkbox-table">
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox" name="question1" value="Coal Mill Fineness"></td>
+                                <td>Coal Mill Fineness (+) 50 mesh more than 0.2%</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" name="question2" value="Coal Mill DPT Normal"></td>
+                                <td>Coal Mill DPT Result abnormal</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" name="question3" value="Preventive Maintenance"></td>
+                                <td>Coal Mill preventive maintenance delayed by more than 20 days</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" name="question4" value="O2 at APH O/L"></td>
+                                <td>O₂ at APH O/L less than Design O₂ at APH O/L</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" name="question5" value="SADC Operative"></td>
+                                <td>SADC operation faulty</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" name="question6" value="FG Temp Difference"></td>
+                                <td>Difference in FG temp. between Left and Right zones at RH and SH zones more than 50°C</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" name="question7" value="APH O/L FG Temp"></td>
+                                <td>Corrected APH O/L FG temp greater than 25 deg. + Design temp at APH O/L</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" name="question8" value="Overhaul Conducted"></td>
+                                <td>Last Overhaul conducted before 1.5 years from current date</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" name="question9" value="Soot Blowing Cycle"></td>
+                                <td>Water wall Soot Blowing Cycle not operated fully</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" name="question10" value="LSRB"></td>
+                                <td>LRSB not operated as per schedule</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" name="question11" value="FTM temperature"></td>
+                                <td>FTM indicating temperatures > 1300 °C</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            <button type="button" class="calculate-properties-btn" onclick="calculateWeightedAverage(); callConsumeTrial();">Calculate</button> 
+        </div>    
+    </form>
+        
+
+    <div class="right-container" id="resultsContainer">
+        <button id="blendPropertiesBtn" class="blendProperties" onclick="openBlendModal()" style="display:none;">Simulated AFB Coal Elemental Analysis</button>      
+    </div>
+</div>
+
+    <!-- Modal for displaying blended coal properties -->
+    <div id="blendPropertiesModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeBlendModal()">&times;</span>
+            <div id="blendValues"></div>  
+        </div>
+    </div>
+   
+
+    <div id="coalPropertiesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Elemental Analysis</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="coalPropertiesContent"></div>
+        </div>
+    </div>  
+
+    <script >
+
+        // ==================== OXIDE ALIAS MAP ====================
+
+const aliasMap = {
+  'SiO2': 'SiO₂',
+  'SiO_2': 'SiO₂',
+  'SiO 2': 'SiO₂',
+
+  'Al2O3': 'Al₂O₃',
+  'Al_2O_3': 'Al₂O₃',
+
+  'Fe2O3': 'Fe₂O₃',
+  'Fe_2O_3': 'Fe₂O₃',
+
+  'Na2O': 'Na₂O',
+  'Na_2_O': 'Na₂O',
+
+  'K2O': 'K₂O',
+  'K_2_O': 'K₂O',
+
+  'P2O5': 'P₂O₅',
+  'P_2_O_5': 'P₂O₅',
+
+  'SO3': 'SO₃',
+  'S O3': 'SO₃',
+
+  'Sulfur': 'Sulphur (S)',
+  'Sulphur': 'Sulphur (S)',
+  'S': 'Sulphur (S)',
+
+  'TiO2': 'TiO₂',
+  'Ti_2_O': 'TiO₂',
+
+  'Mn3O4': 'Mn₃O₄',
+  'Mn_3_O_4': 'Mn₃O₄'
+};
+
+window.aliasMap = aliasMap;
+
+function addBlend() {
+    const MAX_COALS = 10; // <-- increased from 5 to 10
+    const currentCoals = document.querySelectorAll('.blend').length;
+
+    if (currentCoals >= MAX_COALS) {
+        alert("You can only add up to 10 coal types.");
+        return;
+    }
+
+    const index = currentCoals;
+    const blendDiv = document.createElement("div");
+    blendDiv.className = "blend";
+    blendDiv.innerHTML = `
+        <label for="coal${index}">Coal:</label>
+        <select name="coal${index}" id="coal${index}">
+            <option value="">Select Coal Type</option>
+        </select>
+        <input type="number" id="currentrange${index}" placeholder="Current Range (%)">
+        <button type="button" class="remove-blend-btn" onclick="removeBlend(this)">X</button>
+        <button type="button" class="properties-btn" onclick="fetchCoalProperties(${index})">Properties</button>
+        <div id="properties${index}"></div>
+    `;
+
+    const currentRangeInput = blendDiv.querySelector(`#currentrange${index}`);
+    currentRangeInput.addEventListener("input", updateTotalRange);
+
+    const blendRow = document.querySelector(".blend-row");
+
+    // Append the new blendDiv to the blendRow
+    blendRow.appendChild(blendDiv); // This will add it to the end
+
+    populateDropdown(blendDiv.querySelector(`#coal${index}`));
+    updateTotalRange();
+}
+
+        function updateTotalRange() {
+            totalCurrentRange = 0;
+            const ranges = document.querySelectorAll('input[id^="currentrange"]');
+            ranges.forEach(range => {
+                const rangeValue = parseFloat(range.value) || 0;
+                totalCurrentRange += rangeValue;
+            });
+            document.getElementById("totalRange").textContent = totalCurrentRange;
+
+        }
+
+       
+        
+        document.addEventListener("DOMContentLoaded", function () {
+            const checkboxCard = document.getElementById("checkboxCard");
+            const checkboxContainer = document.getElementById("checkboxContainer");
+            const toggleIcon = document.querySelector(".toggle-icon");
+        
+            // Toggle click event
+            checkboxCard.addEventListener("click", function () {
+                if (checkboxContainer.classList.contains("hidden")) {
+                    checkboxContainer.classList.remove("hidden");
+                    checkboxContainer.style.display = "block";
+                    toggleIcon.style.transform = "rotate(180deg)";
+                } else {
+                    checkboxContainer.classList.add("hidden");
+                    setTimeout(() => (checkboxContainer.style.display = "none"), 300);
+                    toggleIcon.style.transform = "rotate(0deg)";
+                }
+            });
+        
+        });
+
+        
+        
+        function getSelectedCheckboxes() {
+            const checkboxes = document.querySelectorAll('.checkbox-container input[type="checkbox"]:checked');
+            let selectedValues = [];
+            checkboxes.forEach((checkbox) => {
+                selectedValues.push(checkbox.name); // Use `name` instead of `value`
+            });
+            return selectedValues;
+        }
+        
+        function openBlendModal() {
+            document.getElementById("blendPropertiesModal").style.display = "block";
+        }
+        
+        function closeBlendModal() {
+            document.getElementById("blendPropertiesModal").style.display = "none";
+        }
+        var samples = [];
+        let predictedAFT = 0;
+        
+//         async function calculateWeightedAverage() {
+
+//             let totalCurrentRange = 0;
+//             const ranges = document.querySelectorAll('input[id^="currentrange"]');
+            
+//             ranges.forEach(range => {
+//                 const rangeValue = parseFloat(range.value) || 0;
+//                 totalCurrentRange += rangeValue;
+//             });
+
+//             if (totalCurrentRange !== 100) {
+//                 alert("Total percentage must be exactly 100 to proceed!");
+//                 return;
+//             }
+//             const rightContainerDiv = document.querySelector("#resultsContainer");
+//             let blendValuesDiv = document.getElementById("blendValues");
+//             let blendPropertiesBtn = document.getElementById("blendPropertiesBtn");
+            
+        
+//             if (!rightContainerDiv) {
+//                 console.error("Element #resultsContainer not found.");
+//                 return;
+//             }
+//             if (!blendValuesDiv) {
+//                 console.error("Element #blendValues not found.");
+//                 return;
+//             }
+        
+//             let totalPercentage = 0;
+//             let propertySums = {
+//                 "SiO₂": 0, "Al₂O₃": 0, "Fe₂O₃": 0, "CaO": 0, "MgO": 0, 
+//                 "Na₂O": 0, "K₂O": 0, "TiO₂": 0, "SO₃": 0, "P₂O₅": 0,
+//                 "Mn₃O₄":0,"Sulphur (S)":0, "GCV": 0
+        
+//             };
+        
+//             const blends = document.querySelectorAll('.blend');
+        
+//             blends.forEach((blend, index) => {
+//                 const selectedCoal = document.querySelector(`#coal${index}`).value;
+//                 const currentRange = parseFloat(document.querySelector(`#currentrange${index}`).value) || 0;
+        
+//                 if (!selectedCoal || currentRange <= 0) return;
+        
+//                 const coalInfo = window.coalData.find(coal => coal.id === selectedCoal);
+//                 if (!coalInfo) return;
+        
+//                 totalPercentage += currentRange;
+        
+//                 for (let prop in propertySums) {
+// // REPLACE existing getPropValue with this improved version
+// function normalizeKeyForMatch(s) {
+//   return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+// }
+
+// function unicodeSubscriptsToDigits(s) {
+//   return String(s || '').replace(/[₀₁₂₃₄₅₆₇₈₉]/g, ch => {
+//     const map = {'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9'};
+//     return map[ch] || ch;
+//   });
+// }
+
+// function getPropValue(coalInfo, prop) {
+//   const p = (coalInfo && coalInfo.properties) || {};
+//   if (!p || Object.keys(p).length === 0) return 0;
+
+//   // 1) direct exact match (most likely when keys already normalized)
+//   if (p[prop] !== undefined) return Number(p[prop]) || 0;
+
+//   // 2) unicode -> ascii (e.g., "SiO₂" -> "SiO2")
+//   const asciiFromProp = unicodeSubscriptsToDigits(prop);
+//   if (p[asciiFromProp] !== undefined) return Number(p[asciiFromProp]) || 0;
+
+//   // 3) try simple ascii (remove spaces/underscores/percent/parens)
+//   const simpleProp = String(prop).replace(/[%\s\(\)_\-]/g, '').replace(/₂/g,'2').replace(/₃/g,'3');
+//   if (p[simpleProp] !== undefined) return Number(p[simpleProp]) || 0;
+
+//   // 4) normalized fuzzy match: compare normalized keys (fallback that handles headers like "SiO2 (%)" or "Si O2")
+//   const target = normalizeKeyForMatch(prop);
+//   for (const key of Object.keys(p)) {
+//     if (normalizeKeyForMatch(key) === target) {
+//       return Number(p[key]) || 0;
+//     }
+//   }
+
+//   // 5) try alias map (both directions) if available
+//   if (typeof aliasMap !== 'undefined') {
+//     // if aliasMap has ascii -> unicode mapping, try to use it
+//     const mapped = aliasMap[asciiFromProp] || aliasMap[simpleProp] || aliasMap[prop];
+//     if (mapped && p[mapped] !== undefined) return Number(p[mapped]) || 0;
+
+//     // also try to find any alias key that maps *to* the requested prop
+//     for (const [from, to] of Object.entries(aliasMap)) {
+//       if (to === prop && p[from] !== undefined) return Number(p[from]) || 0;
+//     }
+//   }
+
+//   // 6) last resort: try parsing numeric from any property whose normalized key contains the normalized prop token
+//   for (const key of Object.keys(p)) {
+//     if (normalizeKeyForMatch(key).includes(target) || target.includes(normalizeKeyForMatch(key))) {
+//       const n = Number(p[key]);
+//       if (!isNaN(n)) return n;
+//     }
+//   }
+
+//   // not found
+//   return 0;
+// }
+
+
+// // then inside your loop:
+// const propValue = getPropValue(coalInfo, prop);
+// propertySums[prop] += propValue * currentRange;
+
+                    
+//                 }
+//             });
+
+//             if (totalPercentage > 0) {
+//                 // Compute weighted averages
+//                 let SIO = propertySums["SiO₂"] / totalPercentage;
+//                 let ALO = propertySums["Al₂O₃"] / totalPercentage;
+//                 let FEO = propertySums["Fe₂O₃"] / totalPercentage;
+//                 let CAO = propertySums["CaO"] / totalPercentage;
+//                 let MGO = propertySums["MgO"] / totalPercentage;
+//                 let NAO = propertySums["Na₂O"] / totalPercentage;
+//                 let KO = propertySums["K₂O"] / totalPercentage;
+//                 let TIO = propertySums["TiO₂"] / totalPercentage;
+//                 let SO = propertySums["SO₃"] / totalPercentage;
+//                 let PO = propertySums["P₂O₅"] / totalPercentage;
+//                 let S = propertySums["Sulphur (S)"]/totalPercentage;
+//                 let MNO = propertySums["Mn₃O₄"]/totalPercentage;
+//                 //let GCV = propertySums["GCV"]/totalPercentage;
+                
+// // --- Local AFT computation (no backend) ---
+// // function computeLocalAFT(SIO, ALO, FEO, CAO, MGO, NAO, KO, SO, TIO) {
+// //   // deterministic formula kept simple — tweak coefficients as you wish.
+// //   // This produces a reasonable numeric AFT value based on oxide contributions.
+// //   const aft = 1200
+// //     + (SIO || 0) * 0.8
+// //     - (SO || 0) * 5
+// //     + (CAO || 0) * 0.6
+// //     + (FEO || 0) * 0.3
+// //     - (NAO || 0) * 0.4
+// //     + (TIO || 0) * 0.2;
+// //   return Math.round(aft * 100) / 100;
+// // }
+
+// // predictedAFT = computeLocalAFT(SIO, ALO, FEO, CAO, MGO, NAO, KO, SO, TIO);
+// // console.log('predictedAFT (local):', predictedAFT);
+
+//  // --- ML-based AFT computation (backend) ---
+// try {
+//   const response = await axios.post(
+//     'http://localhost:3000/calculate-aft',
+//     {
+//       values: [
+//         SIO,  // SiO2
+//         ALO,  // Al2O3
+//         FEO,  // Fe2O3
+//         CAO,  // CaO
+//         MGO,  // MgO
+//         NAO,  // Na2O
+//         KO,   // K2O
+//         SO,   // SO3
+//         TIO   // TiO2
+//       ]
+//     },
+//     {
+//       headers: { 'Content-Type': 'application/json' }
+//     }
+//   );
+
+//   predictedAFT = response.data.prediction;
+//   console.log('predictedAFT (ML):', predictedAFT);
+
+// } catch (err) {
+//   console.error('AFT ML API failed, falling back to 1200:', err);
+  
+// }
+        
+//             blendValuesDiv.innerHTML = ""; 
+//             let acidicOxidesAvg = 0;
+//             let basicOxidesAvg = 0;
+//             let otherOxidesAvg = 0;
+            
+        
+//             if (totalPercentage > 0) {
+//                 let propertiesHTML = `
+//                                       <table border="1">
+//                                         <tr>
+//                                             <th>Property</th>
+//                                             <th>Value</th>
+//                                         </tr>`;
+                
+//                 for (let prop in propertySums) {
+//                     let avgValue = propertySums[prop] / totalPercentage;
+        
+        
+//                         if (prop === "SiO₂" || prop === "Al₂O₃" || prop === "TiO₂") {
+//                             acidicOxidesAvg += avgValue;   
+//                         }
+        
+//                         if (prop === "CaO" || prop === "MgO" || prop === "Na₂O"|| prop === "K₂O") {
+//                             basicOxidesAvg += avgValue;   
+//                         }
+        
+//                         if (prop === "Fe₂O₃" || prop === "SO₃" || prop === "P₂O₅" || prop === "Mn₃O₄") {
+//                             otherOxidesAvg += avgValue;   
+//                         }
+                        
+                        
+                
+//                     propertiesHTML += `<tr>
+//                                            <td><strong>${prop}</strong></td>
+//                                            <td>${avgValue.toFixed(2)}</td>
+//                                        </tr>`;
+//                 }
+                
+//                 propertiesHTML += "</table>";
+        
+//                 console.log("Acidic Value:", acidicOxidesAvg.toFixed(2));
+//                 console.log("Basic Value:", basicOxidesAvg.toFixed(2));
+//                 console.log("other Value:", otherOxidesAvg.toFixed(2));
+                
+        
+//             blendValuesDiv.innerHTML = propertiesHTML;
+            
+//             rightContainerDiv.innerHTML = "";
+        
+// let acidic = acidicOxidesAvg || 0;
+// let basic  = basicOxidesAvg || 0;
+// let other  = otherOxidesAvg || 0;
+
+// const totalABC = acidic + basic + other;
+
+// if (totalABC === 0) {
+
+//   console.warn('Skipping ternary sample: all zero');
+
+// } else {
+
+//   // Scale to 100
+//   if (totalABC <= 1.1) {
+
+//     acidic *= 100;
+//     basic  *= 100;
+//     other  *= 100;
+
+//   } else if (Math.abs(totalABC - 100) > 0.1) {
+
+//     acidic = acidic / totalABC * 100;
+//     basic  = basic  / totalABC * 100;
+//     other  = other  / totalABC * 100;
+//   }
+
+//   let newSample = {
+//     acidicOxides: acidic,
+//     basicOxides: basic,
+//     otherOxides: other,
+//     AFT: predictedAFT
+//   };
+
+//   console.log('Added ternary sample:', newSample);
+
+//   samples.push(newSample);
+// }
+
+        
+//                 // Calculate test values using formulas
+//                 const T250 = Math.sqrt(
+//                     ((((0.00835 * SIO) + (0.00601 * ALO) - 0.109) * 10**7) /
+//                     (2.398 - ((0.0415 * SIO) + (0.0192 * ALO) +
+//                     (0.027 * FEO) + (0.016 * CAO) - 3.92)))) + 150;
+        
+//                 let T250S;
+//                 if (T250 > 1275) T250S = 0;
+//                 else if (T250 < 1200) T250S = 1;
+//                 else T250S = 0.5;
+                
+//                 // Base/Acid Ratio test value
+//                 const BART = (FEO + CAO + MGO + NAO + KO) / (SIO + ALO + TIO);
+        
+//                 // Base/Acid Ratio score
+//                 let BARS;
+//                 if (BART < 0.5) BARS = 0;
+//                 else if (BART > 1) BARS = 1;
+//                 else BARS = 0.5;
+
+//                 //Hemispherical temp formula
+//                 HT= predictedAFT -78;
+
+//                 //Initial Deformatiion Formula
+//                 IDT= predictedAFT-103;
+                
+//                 // Slagging Factor test value
+//                 const SF = BART * S;
+        
+//                 // Slagging Factor score
+//                 let SFS;
+//                 if (SF < 0.6) SFS = 0;
+//                 else if (SF > 1) SFS = 1;
+//                 else SFS = 0.5;
+        
+//                 // Slagging Index test value
+//                 const SIT = (HT + 4 * IDT) / 5;
+        
+//                 // Slagging Index score
+//                 let SIS;
+//                 if (SIT > 1343) SIS = 0;
+//                 else if (SIT < 1149) SIS = 1;
+//                 else SIS = 0.5;
+        
+        
+//                 // Silica % test value
+//                 const SPT = SIO * 100 / (SIO + FEO + CAO + MGO);
+                
+        
+//                 // Silica % score
+//                 let SPS;
+//                 if (SPT > 82) SPS = 0;
+//                 else if (SPT < 30) SPS = 1;
+//                 else SPS = 0.5;
+                
+        
+//                 // Iron Calcium ratio test value
+//                 const ICRT = FEO / CAO;
+                
+        
+//                 // Iron Calcium ratio score
+//                 let ICRS;
+//                 if (ICRT < 0.31) ICRS = 0;
+//                 else if (ICRT > 3) ICRS = 1;
+//                 else ICRS = 0.5;
+        
+//                 // Iron plus Calcium test value
+//                 const IPCT = FEO + CAO;
+        
+//                 // Iron plus Calcium score
+//                 const IPCS = IPCT < 12 ? 0 : 1;
+        
+//                 // Fuel Slagging Potential
+//                 const FSP = Number(T250S) + Number(BARS) + Number(SFS) + Number(SIS) + Number(SPS) + Number(ICRS) + Number(IPCS);
+//                 let FSPD;
+//                 if (FSP < 2) FSPD = "Low";
+//                 else if (FSP > 4) FSPD = "High";
+//                 else FSPD = "Moderate";
+                
+//                 //FOULING
+                
+//                 // Sodium in Ash test value
+//                 const SIAT = NAO * (46 / 62);
+        
+//                 // Sodium in Ash score
+//                 let SIAS;
+//                 if (SIAT < 1) SIAS = 0;
+//                 else if (SIAT > 5) SIAS = 1;
+//                 else SIAS = 0.5;
+                
+//                 // Total Alkali test value
+//                 const TAT = (FEO + CAO + MGO + NAO + KO + MNO + SO + PO);
+                
+//                 // Total Alkali score
+//                 const TAS = TAT < 2 ? 0 : 1;
+        
+//                 // Fouling factor test value
+//                 const FFT = BART * SIAT;
+                
+        
+//                 // Fouling factor score
+//                 let FFS;
+//                 if (FFT < 0.1) FFS = 0;
+//                 else if (FFT > 0.5) FFS = 1;
+//                 else FFS = 0.5;
+                
+        
+//                 // Fuel fouling factor total score
+//                 const FFFTS = Number(SIAS) + Number(TAS) + Number(FFS);
+                
+        
+//                 // Fuel fouling factor total display
+//                 let FFFD;
+//                 if (FFFTS < 1) FFFD = "Low";
+//                 else if (FFFTS > 2) FFFD = "High";
+//                 else FFFD = "Moderate";
+        
+//                 let totalScore = FSP + FFFTS;
+
+//                 let checkboxScore = 0;
+//                 let allQuestions = ["question1", "question2", "question3", "question4", "question5", "question6", "question7", "question8", "question9", "question10", "question11",];
+//                 let selectedValues = getSelectedCheckboxes(); // Get checked checkboxes
+        
+//                 let scoreMapping = {
+//                     "question1": [0.5, 0],  
+//                     "question2": [0.25,0],
+//                     "question3": [0.25, 0],
+//                     "question4": [0.25, 0],
+//                     "question5": [0.5, 0],
+//                     "question6": [0.25, 0],
+//                     "question7": [0.25, 0],
+//                     "question8": [0.25, 0],
+//                     "question9": [0.25, 0],
+//                     "question10": [0.25, 0],
+//                     "question11": [0.5, 0]
+//                 };
+        
+//                 // Iterate through all checkboxes (checked and unchecked)
+//                 allQuestions.forEach(question => {
+//                     let isChecked = selectedValues.includes(question);
+//                     checkboxScore += isChecked ? scoreMapping[question][0] : scoreMapping[question][1];
+//                 });
+        
+//                 let overallTotal = totalScore + checkboxScore;  
+//                 console.log("Total Score:", overallTotal);
+                  
+//             let FoulingHTML = `
+//                     <table>
+//                         <thead>  <tr>
+//                                     <th colspan="3">Slagging Potential (Results in to Clinker Formation)</th> </tr>
+//                                 <tr>
+//                                     <th>Slagging Indices</th>
+//                                     <th>Test Coal</th>
+//                                     <th>Aggregate Scores</th>
+//                                 </tr>
+//                             </thead>
+//                         <tr>
+//                             <td>T250</td>
+//                             <td>${T250.toFixed(2)}</td>
+//                             <td>${T250S}</td>
+//                         </tr>
+//                         <tr>
+//                             <td>Base/Acid Ratio (BART)</td>
+//                             <td>${BART.toFixed(2)}</td>
+//                             <td>${BARS}</td>
+//                         </tr>
+//                         <tr>
+//                             <td>Slagging Factor ((B/A ratio * S in coal))</td>
+//                             <td>${SF.toFixed(2)}</td>
+//                             <td>${SFS}</td>
+//                         </tr>
+//                         <tr>
+//                             <td>Slagging Index Test</td>
+//                             <td>${SIT.toFixed(2)}</td>
+//                             <td>${SIS}</td>
+//                         </tr>
+//                         <tr>
+//                             <td>Silica % Test</td>
+//                             <td>${SPT.toFixed(2)}</td>
+//                             <td>${SPS}</td>
+//                         </tr>
+//                         <tr>
+//                             <td>Iron Calcium Ratio Test</td>
+//                             <td>${ICRT.toFixed(2)}</td>
+//                             <td>${ICRS}</td>
+//                         </tr>
+//                         <tr>
+//                             <td>Iron + Calcium </td>
+//                             <td>${IPCT.toFixed(2)}</td>
+//                             <td>${IPCS}</td>
+//                         </tr>
+//                     </table>`;
+        
+                
+        
+//                 let FoulingHTML2 = `<table>
+//                     <thead>
+//                         <tr><th colspan="3">Fouling Potential (Requires increased soot blowing)</th></tr>
+//                         <tr>
+//                             <th>Fouling Indices</th>
+//                             <th>Test Coal</th>
+//                             <th>Aggregate Scores</th>
+//                         </tr>
+//                     </thead>
+//                     <tr><td>Sodium in Ash</td><td>${SIAT.toFixed(2)}</td><td>${SIAS}</td></tr>
+//                     <tr><td>Alkali Test</td><td>${TAT.toFixed(2)}</td><td>${TAS}</td></tr>
+//                     <tr><td>Fouling Factor (B/A*Na)</td><td>${FFT.toFixed(2)}</td><td>${FFS}</td></tr>
+//                 </table>`;
+                
+//                 rightContainerDiv.appendChild(blendPropertiesBtn);
+                
+                
+//                 google.charts.load('current', { 'packages': ['gauge'] });
+        
+                
+        
+//                 let chartWrapper = document.createElement("div");   
+//                 chartWrapper.style.display = "flex";  // Flexbox for side-by-side layout
+//                 chartWrapper.style.justifyContent = "center"; // Center align
+//                 chartWrapper.style.gap = "40px"; // Space between charts
+//                 rightContainerDiv.appendChild(chartWrapper);
+                
+//                 // Create Slagging Gauge Chart
+//                 const fspGraphWrapper = document.createElement("div");
+//                 fspGraphWrapper.style.textAlign = "center"; 
+                
+//                 const fspDisplay = document.createElement("div");
+//                 fspDisplay.style.marginTop = "20px";
+//                 fspDisplay.style.marginBottom = "3px";
+//                 fspDisplay.style.fontWeight = "bold"; 
+//                 fspDisplay.textContent = `Slagging Potential : ${FSPD}`;
+                
+//                 const fspGraphContainer = document.createElement("div");
+//                 fspGraphContainer.id = "fspGaugeChart";
+//                 fspGraphContainer.style.width = "200px";
+//                 fspGraphContainer.style.height = "200px";
+                
+//                 fspGraphWrapper.appendChild(fspDisplay);
+//                 fspGraphWrapper.appendChild(fspGraphContainer);
+//                 chartWrapper.appendChild(fspGraphWrapper);
+                
+//                 // Create Fouling Gauge Chart
+//                 const ffftsGraphWrapper = document.createElement("div");
+//                 ffftsGraphWrapper.style.textAlign = "center"; 
+                
+//                 const ffftsDisplay = document.createElement("div");
+//                 ffftsDisplay.style.marginTop = "20px";
+//                 ffftsDisplay.style.marginBottom = "3px";
+//                 ffftsDisplay.style.fontWeight = "bold";
+//                 ffftsDisplay.textContent = `Fouling Potential: ${FFFD}`;
+                
+//                 const ffftsGraphContainer = document.createElement("div");
+//                 ffftsGraphContainer.id = "ffftsGaugeChart";
+//                 ffftsGraphContainer.style.width = "200px";
+//                 ffftsGraphContainer.style.height = "200px";
+                
+//                 ffftsGraphWrapper.appendChild(ffftsDisplay);
+//                 ffftsGraphWrapper.appendChild(ffftsGraphContainer);
+//                 chartWrapper.appendChild(ffftsGraphWrapper);
+                
+//                 // Append chartWrapper to the rightContainerDiv
+//                 rightContainerDiv.appendChild(chartWrapper);
+                
+//                 // Create a separate table container BELOW charts
+//                 let tableContainer = document.createElement("div");
+//                 tableContainer.style.width = "100%";
+//                 tableContainer.style.marginTop = "20px";
+//                 rightContainerDiv.appendChild(tableContainer);
+                
+//                 // Load Google Charts
+//                 google.charts.setOnLoadCallback(() => createGaugeChart("fspGaugeChart", FSP, 0, 6, fspColorRanges));
+//                 google.charts.setOnLoadCallback(() => createffftGaugeChart("ffftsGaugeChart", FFFTS, 0, 3, ffftsColorRanges));
+                
+//                 // Table toggle logic
+//                 let fspTableVisible = false;
+//                 let fspTableElement = null;
+                
+//                 let ffftsTableVisible = false;
+//                 let ffftsTableElement = null;
+                
+//                 // Function to update table layout dynamically
+//                 function updateTableLayout() {
+//                     tableContainer.innerHTML = ""; // Clear previous content
+                
+//                     if (fspTableVisible && fspTableElement) {
+//                         fspTableElement.style.width = "100%";
+//                         fspTableElement.style.marginBottom = "10px";
+//                         tableContainer.appendChild(fspTableElement);
+//                     }
+                
+//                     if (ffftsTableVisible && ffftsTableElement) {
+//                         ffftsTableElement.style.width = "100%";
+//                         tableContainer.appendChild(ffftsTableElement);
+//                     }
+                
+//                     // Ensure the overall graph stays at the bottom
+//                     tableContainer.appendChild(overallGraphWrapper);
+//                 }
+                
+//                 // Toggle logic for Slagging Table
+//                 fspGraphContainer.addEventListener("click", () => {
+//                     fspTableVisible = !fspTableVisible;
+                
+//                     if (fspTableVisible) {
+//                         if (!fspTableElement) {
+//                             fspTableElement = document.createElement("div");
+//                             fspTableElement.innerHTML = FoulingHTML;
+//                         }
+//                     } else {
+//                         fspTableElement = null;
+//                     }
+                
+//                     updateTableLayout();
+//                 });
+                
+//                 // Toggle logic for Fouling Table
+//                 ffftsGraphContainer.addEventListener("click", () => {
+//                     ffftsTableVisible = !ffftsTableVisible;
+                
+//                     if (ffftsTableVisible) {
+//                         if (!ffftsTableElement) {
+//                             ffftsTableElement = document.createElement("div");
+//                             ffftsTableElement.innerHTML = FoulingHTML2;
+//                         }
+//                     } else {
+//                         ffftsTableElement = null;
+//                     }
+                
+//                     updateTableLayout();
+//                 });
+                
+                
+//                 // Function to create Google Gauge Chart
+//                 function createGaugeChart(containerId, value, minValue, maxValue, colorRanges) {
+//                     const data = google.visualization.arrayToDataTable([
+//                         ['Label', 'Value'],
+//                         ['Value', value]
+//                     ]);
+                
+//                     const options = {
+//                         width: 200, height: 200,
+//                         min: minValue,
+//                         max: maxValue,
+//                         redFrom: colorRanges.red[0], redTo: colorRanges.red[1],
+//                         yellowFrom: colorRanges.yellow[0], yellowTo: colorRanges.yellow[1],
+//                         greenFrom: colorRanges.green[0], greenTo: colorRanges.green[1],
+//                         greenColor: '#5de65d', // Light Green
+//                         yellowColor: '#ffff76', // Light Yellow
+//                         redColor: '#e24242', // Light Red
+//                         majorTicks: ['0', '1', '2', '3', '4', '5', '6'], // 6 bold tick marks
+//                         minorTicks: 2
+                        
+//                     };   
+                
+//                     const chart = new google.visualization.Gauge(document.getElementById(containerId));
+//                     chart.draw(data, options);
+//                 }
+        
+//                 function createffftGaugeChart(containerId, value, minValue, maxValue, colorRanges) {
+//                     const data = google.visualization.arrayToDataTable([
+//                         ['Label', 'Value'],
+//                         ['Value', value]
+//                     ]);
+                
+//                     const options = {
+//                         width: 200, height: 200,
+//                         min: minValue,
+//                         max: maxValue,
+//                         redFrom: colorRanges.red[0], redTo: colorRanges.red[1],
+//                         yellowFrom: colorRanges.yellow[0], yellowTo: colorRanges.yellow[1],
+//                         greenFrom: colorRanges.green[0], greenTo: colorRanges.green[1],
+//                         greenColor: '#5de65d', // Light Green
+//                         yellowColor: '#ffff76', // Light Yellow
+//                         redColor: '#e24242', // Light Red
+//                         majorTicks: ['0', '1', '2', '3'], // 4 bold tick marks
+//                         minorTicks: 2
+                        
+//                     };
+//                     const chart = new google.visualization.Gauge(document.getElementById(containerId));
+//                     chart.draw(data, options);
+//                 }
+        
+//                 // Color ranges for FSP (0 to 6)
+//                 const fspColorRanges = {
+//                     green: [0, 2],
+//                     yellow: [2, 4],
+//                     red: [4, 6]
+//                 };
+        
+//                 // Color ranges for FFTS (0 to 4)
+//                 const ffftsColorRanges = {
+//                     green: [0, 1],
+//                     yellow: [1, 2],
+//                     red: [2, 3]
+//                 };
+         
+        
+//                 function createOverallGraph(totalScore, checkboxScore, overallTotal) {
+//                     const minValue = 0;
+//                     const maxValue = 10;
+
+//                     // Graph container
+//                     const overallGraphContainer = document.createElement("div");
+//                     overallGraphContainer.style.width = "550px";
+//                     overallGraphContainer.style.height = "32px";
+//                     overallGraphContainer.style.border = "1px solid black";
+//                     overallGraphContainer.style.borderRadius = "12px";
+//                     overallGraphContainer.style.position = "relative";
+//                     overallGraphContainer.style.marginBottom = "20px";
+//                     overallGraphContainer.style.marginLeft = "50px";
+//                     overallGraphContainer.style.display = "flex";
+
+//                     let sfWidth = (totalScore / maxValue) * 100;
+//                     sfWidth = sfWidth > 100 ? 100 : sfWidth;
+
+//                     let cbWidth = ((totalScore + checkboxScore) > maxValue) 
+//                         ? Math.max(0, (maxValue - totalScore) / maxValue * 100) 
+//                         : (checkboxScore / maxValue) * 100;
+
+//                     const totalCombined = totalScore + checkboxScore;
+
+//                     // Slagging + Fouling Score Bar
+//                     const sfBar = document.createElement("div");
+//                     sfBar.style.height = "100%";
+//                     sfBar.style.width = `${sfWidth}%`;
+//                     sfBar.style.borderRadius = totalCombined >= maxValue ? "12px" : "12px 0 0 12px";
+//                     sfBar.style.backgroundColor = getColor(totalScore);
+
+//                     // Checkbox Score Bar (overlay)
+//                     const cbBar = document.createElement("div");
+//                     cbBar.style.height = "100%";
+//                     cbBar.style.width = `${cbWidth}%`;
+//                     cbBar.style.borderRadius = totalCombined >= maxValue ? "0 12px 12px 0" : "0";
+//                     cbBar.style.backgroundColor = getCheckboxBaseColor(totalScore); // base color
+//                     cbBar.style.backgroundImage = getHatchingLines(getHatchColor(totalCombined)); // hatch color depends on total
+
+//                     // Append bars
+//                     overallGraphContainer.appendChild(sfBar);
+//                     overallGraphContainer.appendChild(cbBar);
+
+//                     // Tick marks
+//                     for (let i = minValue; i <= maxValue; i++) {
+//                         const tick = document.createElement("div");
+//                         tick.style.position = "absolute";
+//                         tick.style.left = `${(i / maxValue) * 100}%`;
+//                         tick.style.top = "50%";
+//                         tick.style.transform = "translateY(-50%)";
+//                         tick.style.height = "10px";
+//                         tick.style.width = "1px";
+//                         tick.style.backgroundColor = "black";
+
+//                         const label = document.createElement("span");
+//                         label.style.position = "absolute";
+//                         label.style.marginTop = "5px";
+//                         label.style.left = `${(i / maxValue) * 100}%`;
+//                         label.style.top = "100%";
+//                         label.style.transform = "translateX(-50%)";
+//                         label.style.fontSize = "12px";
+//                         label.textContent = i;
+
+//                         overallGraphContainer.appendChild(tick);
+//                         overallGraphContainer.appendChild(label);
+//                     }
+
+//                     // Display score
+//                     const totalDisplay = document.createElement("div");
+//                     totalDisplay.style.marginBottom = "10px";
+//                     totalDisplay.style.marginTop = "10px";
+//                     totalDisplay.style.marginLeft = "80px";
+//                     totalDisplay.style.fontSize = "18px";
+//                     totalDisplay.style.fontWeight = "bold";
+//                     totalDisplay.textContent = `Overall Score: ${overallTotal.toFixed(1)} (Slagging + Fouling: ${totalScore.toFixed(1)}, O&M Score: ${checkboxScore.toFixed(1)})`;
+
+//                     rightContainerDiv.appendChild(totalDisplay);
+//                     rightContainerDiv.appendChild(overallGraphContainer);
+//                 }
+
+//                 // Main score color
+//                 function getColor(score) {
+//                     if (score < 3) return "#a6e3a6";
+//                     if (score < 6.5) return "yellow";
+//                     return "red";
+//                 }
+
+//                 // Base color of checkbox segment depends only on totalScore
+//                 function getCheckboxBaseColor(score) {
+//                     if (score < 3) return "#5de65d";
+//                     if (score < 6.5) return "#fddf05";
+//                     return "#e24242";
+//                 }
+
+//                 // Hatch overlay color depends on totalCombined
+//                 function getHatchColor(totalCombined) {
+//                     if (totalCombined > 6.5) return "red";
+//                     if (totalCombined > 3) return "yellow";
+//                     return "green";
+//                 }
+                
+//                 function getHatchingLines(hatchColor) {
+//                     return `repeating-linear-gradient(45deg, transparent, transparent 5px, ${hatchColor} 5px, ${hatchColor} 10px)`;
+//                 }
+
+                
+//                 document.getElementById("resultsContainer").style.display = "flex";
+//                 document.getElementById("blendValues").style.display = "flex";
+//                 blendPropertiesBtn.style.display = "block";
+//                 let overallGraphWrapper = document.getElementById("overallGraphWrapper");
+//                 if (!overallGraphWrapper) {
+//                     overallGraphWrapper = document.createElement("div");
+//                     overallGraphWrapper.id = "overallGraphWrapper";
+//                     rightContainerDiv.insertBefore(overallGraphWrapper, rightContainerDiv.firstChild);
+//                 }
+//                 overallGraphWrapper.innerHTML = ""; // Clear previous content
+//                 createOverallGraph(totalScore, checkboxScore, overallTotal);
+
+//                 const plotDiv = document.createElement('div');
+//                 plotDiv.id = "ternary-plot";
+//                 rightContainerDiv.appendChild(plotDiv);
+//                 updatePlot();
+        
+                
+//             } 
+//         }
+//         } 
+       
+       
+
+async function calculateWeightedAverage() {
+    // helper functions (declared once here)
+    function normalizeKeyForMatch(s) {
+      return String(s || '').toLowerCase()
+        .replace(/[₀₁₂₃₄₅₆₇₈₉]/g, d =>
+          ({'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9'}[d])
+        )
+        .replace(/[^a-z0-9]/g, '');
+    }
+
+    function unicodeSubscriptsToDigits(s) {
+      return String(s || '').replace(/[₀₁₂₃₄₅₆₇₈₉]/g, ch => {
+        const map = {'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9'};
+        return map[ch] || ch;
+      });
+    }
+
+    function getPropValue(coalInfo, prop) {
+      const p = (coalInfo && coalInfo.properties) || {};
+      if (!p || Object.keys(p).length === 0) return 0;
+
+      // 1) direct exact match
+      if (p[prop] !== undefined) return Number(p[prop]) || 0;
+
+      // 2) unicode -> ascii (SiO₂ -> SiO2)
+      const asciiFromProp = unicodeSubscriptsToDigits(prop);
+      if (p[asciiFromProp] !== undefined) return Number(p[asciiFromProp]) || 0;
+
+      // 3) try simple ascii (remove spaces/underscores/percent/parens)
+      const simpleProp = String(prop).replace(/[%\s\(\)_\-]/g, '').replace(/₂/g,'2').replace(/₃/g,'3');
+      if (p[simpleProp] !== undefined) return Number(p[simpleProp]) || 0;
+
+      // 4) normalized fuzzy match
+      const target = normalizeKeyForMatch(prop);
+      for (const key of Object.keys(p)) {
+        if (normalizeKeyForMatch(key) === target) {
+          return Number(p[key]) || 0;
+        }
+      }
+
+      // 5) try alias map if available
+      if (typeof aliasMap !== 'undefined') {
+        const mapped = aliasMap[asciiFromProp] || aliasMap[simpleProp] || aliasMap[prop];
+        if (mapped && p[mapped] !== undefined) return Number(p[mapped]) || 0;
+
+        for (const [from, to] of Object.entries(aliasMap)) {
+          if (to === prop && p[from] !== undefined) return Number(p[from]) || 0;
+        }
+      }
+
+      // 6) contains / fuzzy fallback
+      for (const key of Object.keys(p)) {
+        if (normalizeKeyForMatch(key).includes(target) || target.includes(normalizeKeyForMatch(key))) {
+          const n = Number(p[key]);
+          if (!isNaN(n)) return n;
+        }
+      }
+
+      return 0;
+    }
+
+    // 1) Validate total percentages
+    let totalCurrentRange = 0;
+    const ranges = document.querySelectorAll('input[id^="currentrange"]');
+    ranges.forEach(range => {
+        const rangeValue = parseFloat(range.value) || 0;
+        totalCurrentRange += rangeValue;
+    });
+
+    if (totalCurrentRange !== 100) {
+        alert("Total percentage must be exactly 100 to proceed!");
+        return;
+    }
+
+    // 2) Basic DOM refs
+    const rightContainerDiv = document.querySelector("#resultsContainer");
+    let blendValuesDiv = document.getElementById("blendValues");
+    let blendPropertiesBtn = document.getElementById("blendPropertiesBtn");
+
+    if (!rightContainerDiv) {
+        console.error("Element #resultsContainer not found.");
+        return;
+    }
+    if (!blendValuesDiv) {
+        console.error("Element #blendValues not found.");
+        return;
+    }
+
+    // 3) Prepare sums
+    let totalPercentage = 0;
+    let propertySums = {
+        "SiO₂": 0, "Al₂O₃": 0, "Fe₂O₃": 0, "CaO": 0, "MgO": 0,
+        "Na₂O": 0, "K₂O": 0, "TiO₂": 0, "SO₃": 0, "P₂O₅": 0,
+        "Mn₃O₄": 0, "Sulphur (S)": 0, "GCV": 0
+    };
+
+    // 4) Iterate blends and build propertySums
+    const blends = document.querySelectorAll('.blend');
+
+    blends.forEach((blend, index) => {
+        const selectEl = document.querySelector(`#coal${index}`);
+        const rangeEl = document.querySelector(`#currentrange${index}`);
+        const selectedCoal = selectEl ? selectEl.value : null;
+        const currentRange = parseFloat(rangeEl ? rangeEl.value : 0) || 0;
+
+        if (!selectedCoal || currentRange <= 0) return;
+
+        // tolerant lookup: id exact match first, then match by coalName / coalType / id normalized
+        let coalInfo = (window.coalData || []).find(c => c && String(c.id) === String(selectedCoal));
+
+        if (!coalInfo) {
+          const selNorm = String(selectedCoal || '').toLowerCase().trim();
+          coalInfo = (window.coalData || []).find(c => {
+            if (!c) return false;
+            const names = [
+              String(c.coalName || '').toLowerCase().trim(),
+              String(c.coalType || '').toLowerCase().trim(),
+              String(c.id || '').toLowerCase().trim()
+            ];
+            return names.some(x => x && x === selNorm);
+          });
+        }
+
+        if (!coalInfo) {
+            console.warn('Coal not found for selection (skipping):', selectedCoal);
+            return; // keep previous behavior but log the cause
+        }
+
+        totalPercentage += currentRange;
+
+        for (let prop in propertySums) {
+            const propValue = getPropValue(coalInfo, prop);
+            propertySums[prop] += (propValue || 0) * currentRange;
+        }
+    });
+
+    if (totalPercentage <= 0) {
+        alert("No valid coal blends found to compute.");
+        return;
+    }
+
+    // 5) Compute weighted averages (divide by totalPercentage)
+    let SIO = propertySums["SiO₂"] / totalPercentage;
+    let ALO = propertySums["Al₂O₃"] / totalPercentage;
+    let FEO = propertySums["Fe₂O₃"] / totalPercentage;
+    let CAO = propertySums["CaO"] / totalPercentage;
+    let MGO = propertySums["MgO"] / totalPercentage;
+    let NAO = propertySums["Na₂O"] / totalPercentage;
+    let KO  = propertySums["K₂O"] / totalPercentage;
+    let TIO = propertySums["TiO₂"] / totalPercentage;
+    let SO  = propertySums["SO₃"] / totalPercentage;
+    let PO  = propertySums["P₂O₅"] / totalPercentage;
+    let S   = propertySums["Sulphur (S)"] / totalPercentage;
+    let MNO = propertySums["Mn₃O₄"] / totalPercentage;
+
+    // 6) Debug — show what will be sent to ML
+    console.table({
+        SiO2: SIO, Al2O3: ALO, Fe2O3: FEO,
+        CaO: CAO, MgO: MGO, Na2O: NAO,
+        K2O: KO, SO3: SO, TiO2: TIO
+    });
+
+    // 7) Call ML endpoint to get predictedAFT
+    try {
+        const response = await axios.post(
+            './calculate-aft',
+            {
+                values: [SIO, ALO, FEO, CAO, MGO, NAO, KO, SO, TIO]
+            },
+            { headers: { 'Content-Type': 'application/json' } }
+        );
+
+        // Use backend prediction (no redeclaration - use outer scope variable)
+        predictedAFT = Number(response.data.prediction);
+        console.log('predictedAFT (ML):', predictedAFT);
+
+    } catch (err) {
+        console.error('AFT ML API failed:', err);
+        // safe fallback value so downstream calculations don't break
+        predictedAFT = 1200;
+        console.log('predictedAFT (fallback):', predictedAFT);
+    }
+
+    // 8) Build the properties HTML (acidic/basic/other) and compute plotting values
+    blendValuesDiv.innerHTML = "";
+    let acidicOxidesAvg = 0;
+    let basicOxidesAvg = 0;
+    let otherOxidesAvg = 0;
+
+    if (totalPercentage > 0) {
+        let propertiesHTML = `
+            <table border="1">
+                <tr><th>Property</th><th>Value</th></tr>
+        `;
+
+        for (let prop in propertySums) {
+            let avgValue = (propertySums[prop] / totalPercentage) || 0;
+
+            if (prop === "SiO₂" || prop === "Al₂O₃" || prop === "TiO₂") {
+                acidicOxidesAvg += avgValue;
+            }
+            if (prop === "CaO" || prop === "MgO" || prop === "Na₂O" || prop === "K₂O") {
+                basicOxidesAvg += avgValue;
+            }
+            if (prop === "Fe₂O₃" || prop === "SO₃" || prop === "P₂O₅" || prop === "Mn₃O₄") {
+                otherOxidesAvg += avgValue;
+            }
+
+            propertiesHTML += `<tr><td><strong>${prop}</strong></td><td>${avgValue.toFixed(2)}</td></tr>`;
+        }
+
+        propertiesHTML += "</table>";
+        blendValuesDiv.innerHTML = propertiesHTML;
+
+        // Clear previous right container content and push the "Simulated AFB" button back
+        rightContainerDiv.innerHTML = "";
+        rightContainerDiv.appendChild(blendPropertiesBtn);
+
+        // Prepare ternary sample values
+        let acidic = acidicOxidesAvg || 0;
+        let basic  = basicOxidesAvg || 0;
+        let other  = otherOxidesAvg || 0;
+
+        const totalABC = acidic + basic + other;
+
+        if (totalABC === 0) {
+            console.warn('Skipping ternary sample: all zero');
+        } else {
+            // normalize to percent-scale used by ternary
+            if (totalABC <= 1.1) {
+                acidic *= 100;
+                basic  *= 100;
+                other  *= 100;
+            } else if (Math.abs(totalABC - 100) > 0.1) {
+                acidic = acidic / totalABC * 100;
+                basic  = basic  / totalABC * 100;
+                other  = other  / totalABC * 100;
+            }
+
+            let newSample = {
+                acidicOxides: acidic,
+                basicOxides: basic,
+                otherOxides: other,
+                AFT: predictedAFT
+            };
+            console.log('Added ternary sample:', newSample);
+            samples.push(newSample);
+        }
+
+        // 9) Slagging and Fouling calculations (same as original)
+        const T250 = Math.sqrt(
+            ((((0.00835 * SIO) + (0.00601 * ALO) - 0.109) * 10**7) /
+            (2.398 - ((0.0415 * SIO) + (0.0192 * ALO) +
+            (0.027 * FEO) + (0.016 * CAO) - 3.92)))) + 150;
+
+        let T250S;
+        if (T250 > 1275) T250S = 0;
+        else if (T250 < 1200) T250S = 1;
+        else T250S = 0.5;
+
+        const BART = (FEO + CAO + MGO + NAO + KO) / (SIO + ALO + TIO);
+
+        let BARS;
+        if (BART < 0.5) BARS = 0;
+        else if (BART > 1) BARS = 1;
+        else BARS = 0.5;
+
+        let HT = predictedAFT - 78;
+        let IDT = predictedAFT - 103;
+
+        const SF = BART * S;
+        let SFS;
+        if (SF < 0.6) SFS = 0;
+        else if (SF > 1) SFS = 1;
+        else SFS = 0.5;
+
+        const SIT = (HT + 4 * IDT) / 5;
+        let SIS;
+        if (SIT > 1343) SIS = 0;
+        else if (SIT < 1149) SIS = 1;
+        else SIS = 0.5;
+
+        const SPT = SIO * 100 / (SIO + FEO + CAO + MGO);
+        let SPS;
+        if (SPT > 82) SPS = 0;
+        else if (SPT < 30) SPS = 1;
+        else SPS = 0.5;
+
+        const ICRT = FEO / CAO;
+        let ICRS;
+        if (ICRT < 0.31) ICRS = 0;
+        else if (ICRT > 3) ICRS = 1;
+        else ICRS = 0.5;
+
+        const IPCT = FEO + CAO;
+        const IPCS = IPCT < 12 ? 0 : 1;
+
+        const FSP = Number(T250S) + Number(BARS) + Number(SFS) + Number(SIS) + Number(SPS) + Number(ICRS) + Number(IPCS);
+        let FSPD;
+        if (FSP < 2) FSPD = "Low";
+        else if (FSP > 4) FSPD = "High";
+        else FSPD = "Moderate";
+
+        // FOULING
+        const SIAT = NAO * (46 / 62);
+        let SIAS;
+        if (SIAT < 1) SIAS = 0;
+        else if (SIAT > 5) SIAS = 1;
+        else SIAS = 0.5;
+
+        const TAT = (FEO + CAO + MGO + NAO + KO + MNO + SO + PO);
+        const TAS = TAT < 2 ? 0 : 1;
+
+        const FFT = BART * SIAT;
+        let FFS;
+        if (FFT < 0.1) FFS = 0;
+        else if (FFT > 0.5) FFS = 1;
+        else FFS = 0.5;
+
+        const FFFTS = Number(SIAS) + Number(TAS) + Number(FFS);
+        let FFFD;
+        if (FFFTS < 1) FFFD = "Low";
+        else if (FFFTS > 2) FFFD = "High";
+        else FFFD = "Moderate";
+
+        let totalScore = FSP + FFFTS;
+
+        // O&M checkbox scoring
+        let checkboxScore = 0;
+        let allQuestions = ["question1","question2","question3","question4","question5","question6","question7","question8","question9","question10","question11"];
+        let selectedValues = getSelectedCheckboxes();
+
+        let scoreMapping = {
+            "question1": [0.5, 0],
+            "question2": [0.25, 0],
+            "question3": [0.25, 0],
+            "question4": [0.25, 0],
+            "question5": [0.5, 0],
+            "question6": [0.25, 0],
+            "question7": [0.25, 0],
+            "question8": [0.25, 0],
+            "question9": [0.25, 0],
+            "question10": [0.25, 0],
+            "question11": [0.5, 0]
+        };
+
+        allQuestions.forEach(question => {
+            let isChecked = selectedValues.includes(question);
+            checkboxScore += isChecked ? scoreMapping[question][0] : scoreMapping[question][1];
+        });
+
+        let overallTotal = totalScore + checkboxScore;
+        console.log("Total Score:", overallTotal);
+
+        let FoulingHTML = `
+            <table>
+                <thead><tr><th colspan="3">Slagging Potential (Results in to Clinker Formation)</th></tr>
+                <tr><th>Slagging Indices</th><th>Test Coal</th><th>Aggregate Scores</th></tr></thead>
+                <tr><td>T250</td><td>${T250.toFixed(2)}</td><td>${T250S}</td></tr>
+                <tr><td>Base/Acid Ratio (BART)</td><td>${BART.toFixed(2)}</td><td>${BARS}</td></tr>
+                <tr><td>Slagging Factor ((B/A ratio * S in coal))</td><td>${SF.toFixed(2)}</td><td>${SFS}</td></tr>
+                <tr><td>Slagging Index Test</td><td>${SIT.toFixed(2)}</td><td>${SIS}</td></tr>
+                <tr><td>Silica % Test</td><td>${SPT.toFixed(2)}</td><td>${SPS}</td></tr>
+                <tr><td>Iron Calcium Ratio Test</td><td>${ICRT.toFixed(2)}</td><td>${ICRS}</td></tr>
+                <tr><td>Iron + Calcium</td><td>${IPCT.toFixed(2)}</td><td>${IPCS}</td></tr>
+            </table>`;
+
+        let FoulingHTML2 = `<table>
+            <thead><tr><th colspan="3">Fouling Potential (Requires increased soot blowing)</th></tr>
+            <tr><th>Fouling Indices</th><th>Test Coal</th><th>Aggregate Scores</th></tr></thead>
+            <tr><td>Sodium in Ash</td><td>${SIAT.toFixed(2)}</td><td>${SIAS}</td></tr>
+            <tr><td>Alkali Test</td><td>${TAT.toFixed(2)}</td><td>${TAS}</td></tr>
+            <tr><td>Fouling Factor (B/A*Na)</td><td>${FFT.toFixed(2)}</td><td>${FFS}</td></tr>
+        </table>`;
+
+        rightContainerDiv.appendChild(blendPropertiesBtn);
+
+        // charts + gauge + tables (kept the same)
+        google.charts.load('current', { 'packages': ['gauge'] });
+
+        let chartWrapper = document.createElement("div");
+        chartWrapper.style.display = "flex";
+        chartWrapper.style.justifyContent = "center";
+        chartWrapper.style.gap = "40px";
+        rightContainerDiv.appendChild(chartWrapper);
+
+        const fspGraphWrapper = document.createElement("div");
+        fspGraphWrapper.style.textAlign = "center";
+
+        const fspDisplay = document.createElement("div");
+        fspDisplay.style.marginTop = "20px";
+        fspDisplay.style.marginBottom = "3px";
+        fspDisplay.style.fontWeight = "bold";
+        fspDisplay.textContent = `Slagging Potential : ${FSPD}`;
+
+        const fspGraphContainer = document.createElement("div");
+        fspGraphContainer.id = "fspGaugeChart";
+        fspGraphContainer.style.width = "200px";
+        fspGraphContainer.style.height = "200px";
+
+        fspGraphWrapper.appendChild(fspDisplay);
+        fspGraphWrapper.appendChild(fspGraphContainer);
+        chartWrapper.appendChild(fspGraphWrapper);
+
+        const ffftsGraphWrapper = document.createElement("div");
+        ffftsGraphWrapper.style.textAlign = "center";
+
+        const ffftsDisplay = document.createElement("div");
+        ffftsDisplay.style.marginTop = "20px";
+        ffftsDisplay.style.marginBottom = "3px";
+        ffftsDisplay.style.fontWeight = "bold";
+        ffftsDisplay.textContent = `Fouling Potential: ${FFFD}`;
+
+        const ffftsGraphContainer = document.createElement("div");
+        ffftsGraphContainer.id = "ffftsGaugeChart";
+        ffftsGraphContainer.style.width = "200px";
+        ffftsGraphContainer.style.height = "200px";
+
+        ffftsGraphWrapper.appendChild(ffftsDisplay);
+        ffftsGraphWrapper.appendChild(ffftsGraphContainer);
+        chartWrapper.appendChild(ffftsGraphWrapper);
+
+        let tableContainer = document.createElement("div");
+        tableContainer.style.width = "100%";
+        tableContainer.style.marginTop = "20px";
+        rightContainerDiv.appendChild(tableContainer);
+
+        google.charts.setOnLoadCallback(() => createGaugeChart("fspGaugeChart", FSP, 0, 6, fspColorRanges));
+        google.charts.setOnLoadCallback(() => createffftGaugeChart("ffftsGaugeChart", FFFTS, 0, 3, ffftsColorRanges));
+
+        // toggle logic + chart functions (kept same as original)
+        let fspTableVisible = false;
+        let fspTableElement = null;
+        let ffftsTableVisible = false;
+        let ffftsTableElement = null;
+
+        function updateTableLayout() {
+            tableContainer.innerHTML = "";
+            if (fspTableVisible && fspTableElement) {
+                fspTableElement.style.width = "100%";
+                fspTableElement.style.marginBottom = "10px";
+                tableContainer.appendChild(fspTableElement);
+            }
+            if (ffftsTableVisible && ffftsTableElement) {
+                ffftsTableElement.style.width = "100%";
+                tableContainer.appendChild(ffftsTableElement);
+            }
+            tableContainer.appendChild(overallGraphWrapper);
+        }
+
+        fspGraphContainer.addEventListener("click", () => {
+            fspTableVisible = !fspTableVisible;
+            if (fspTableVisible) {
+                if (!fspTableElement) {
+                    fspTableElement = document.createElement("div");
+                    fspTableElement.innerHTML = FoulingHTML;
+                }
+            } else {
+                fspTableElement = null;
+            }
+            updateTableLayout();
+        });
+
+        ffftsGraphContainer.addEventListener("click", () => {
+            ffftsTableVisible = !ffftsTableVisible;
+            if (ffftsTableVisible) {
+                if (!ffftsTableElement) {
+                    ffftsTableElement = document.createElement("div");
+                    ffftsTableElement.innerHTML = FoulingHTML2;
+                }
+            } else {
+                ffftsTableElement = null;
+            }
+            updateTableLayout();
+        });
+
+        function createGaugeChart(containerId, value, minValue, maxValue, colorRanges) {
+            const data = google.visualization.arrayToDataTable([
+                ['Label', 'Value'],
+                ['Value', value]
+            ]);
+            const options = {
+                width: 200, height: 200,
+                min: minValue,
+                max: maxValue,
+                redFrom: colorRanges.red[0], redTo: colorRanges.red[1],
+                yellowFrom: colorRanges.yellow[0], yellowTo: colorRanges.yellow[1],
+                greenFrom: colorRanges.green[0], greenTo: colorRanges.green[1],
+                greenColor: '#5de65d',
+                yellowColor: '#ffff76',
+                redColor: '#e24242',
+                majorTicks: ['0', '1', '2', '3', '4', '5', '6'],
+                minorTicks: 2
+            };
+            const chart = new google.visualization.Gauge(document.getElementById(containerId));
+            chart.draw(data, options);
+        }
+
+        function createffftGaugeChart(containerId, value, minValue, maxValue, colorRanges) {
+            const data = google.visualization.arrayToDataTable([
+                ['Label', 'Value'],
+                ['Value', value]
+            ]);
+            const options = {
+                width: 200, height: 200,
+                min: minValue,
+                max: maxValue,
+                redFrom: colorRanges.red[0], redTo: colorRanges.red[1],
+                yellowFrom: colorRanges.yellow[0], yellowTo: colorRanges.yellow[1],
+                greenFrom: colorRanges.green[0], greenTo: colorRanges.green[1],
+                greenColor: '#5de65d',
+                yellowColor: '#ffff76',
+                redColor: '#e24242',
+                majorTicks: ['0', '1', '2', '3'],
+                minorTicks: 2
+            };
+            const chart = new google.visualization.Gauge(document.getElementById(containerId));
+            chart.draw(data, options);
+        }
+
+        const fspColorRanges = { green: [0, 2], yellow: [2, 4], red: [4, 6] };
+        const ffftsColorRanges = { green: [0, 1], yellow: [1, 2], red: [2, 3] };
+
+        function createOverallGraph(totalScore, checkboxScore, overallTotal) {
+            const minValue = 0;
+            const maxValue = 10;
+            const overallGraphContainer = document.createElement("div");
+            overallGraphContainer.style.width = "550px";
+            overallGraphContainer.style.height = "32px";
+            overallGraphContainer.style.border = "1px solid black";
+            overallGraphContainer.style.borderRadius = "12px";
+            overallGraphContainer.style.position = "relative";
+            overallGraphContainer.style.marginBottom = "20px";
+            overallGraphContainer.style.marginLeft = "50px";
+            overallGraphContainer.style.display = "flex";
+
+            let sfWidth = (totalScore / maxValue) * 100;
+            sfWidth = sfWidth > 100 ? 100 : sfWidth;
+
+            let cbWidth = ((totalScore + checkboxScore) > maxValue)
+                ? Math.max(0, (maxValue - totalScore) / maxValue * 100)
+                : (checkboxScore / maxValue) * 100;
+
+            const totalCombined = totalScore + checkboxScore;
+
+            const sfBar = document.createElement("div");
+            sfBar.style.height = "100%";
+            sfBar.style.width = `${sfWidth}%`;
+            sfBar.style.borderRadius = totalCombined >= maxValue ? "12px" : "12px 0 0 12px";
+            sfBar.style.backgroundColor = getColor(totalScore);
+
+            const cbBar = document.createElement("div");
+            cbBar.style.height = "100%";
+            cbBar.style.width = `${cbWidth}%`;
+            cbBar.style.borderRadius = totalCombined >= maxValue ? "0 12px 12px 0" : "0";
+            cbBar.style.backgroundColor = getCheckboxBaseColor(totalScore);
+            cbBar.style.backgroundImage = getHatchingLines(getHatchColor(totalCombined));
+
+            overallGraphContainer.appendChild(sfBar);
+            overallGraphContainer.appendChild(cbBar);
+
+            for (let i = minValue; i <= maxValue; i++) {
+                const tick = document.createElement("div");
+                tick.style.position = "absolute";
+                tick.style.left = `${(i / maxValue) * 100}%`;
+                tick.style.top = "50%";
+                tick.style.transform = "translateY(-50%)";
+                tick.style.height = "10px";
+                tick.style.width = "1px";
+                tick.style.backgroundColor = "black";
+
+                const label = document.createElement("span");
+                label.style.position = "absolute";
+                label.style.marginTop = "5px";
+                label.style.left = `${(i / maxValue) * 100}%`;
+                label.style.top = "100%";
+                label.style.transform = "translateX(-50%)";
+                label.style.fontSize = "12px";
+                label.textContent = i;
+
+                overallGraphContainer.appendChild(tick);
+                overallGraphContainer.appendChild(label);
+            }
+
+            const totalDisplay = document.createElement("div");
+            totalDisplay.style.marginBottom = "10px";
+            totalDisplay.style.marginTop = "10px";
+            totalDisplay.style.marginLeft = "80px";
+            totalDisplay.style.fontSize = "18px";
+            totalDisplay.style.fontWeight = "bold";
+            totalDisplay.textContent = `Overall Score: ${overallTotal.toFixed(1)} (Slagging + Fouling: ${totalScore.toFixed(1)}, O&M Score: ${checkboxScore.toFixed(1)})`;
+
+            rightContainerDiv.appendChild(totalDisplay);
+            rightContainerDiv.appendChild(overallGraphContainer);
+        }
+
+        function getColor(score) {
+            if (score < 3) return "#a6e3a6";
+            if (score < 6.5) return "yellow";
+            return "red";
+        }
+
+        function getCheckboxBaseColor(score) {
+            if (score < 3) return "#5de65d";
+            if (score < 6.5) return "#fddf05";
+            return "#e24242";
+        }
+
+        function getHatchColor(totalCombined) {
+            if (totalCombined > 6.5) return "red";
+            if (totalCombined > 3) return "yellow";
+            return "green";
+        }
+
+        function getHatchingLines(hatchColor) {
+            return `repeating-linear-gradient(45deg, transparent, transparent 5px, ${hatchColor} 5px, ${hatchColor} 10px)`;
+        }
+
+        document.getElementById("resultsContainer").style.display = "flex";
+        document.getElementById("blendValues").style.display = "flex";
+        blendPropertiesBtn.style.display = "block";
+
+        let overallGraphWrapper = document.getElementById("overallGraphWrapper");
+        if (!overallGraphWrapper) {
+            overallGraphWrapper = document.createElement("div");
+            overallGraphWrapper.id = "overallGraphWrapper";
+            rightContainerDiv.insertBefore(overallGraphWrapper, rightContainerDiv.firstChild);
+        }
+        overallGraphWrapper.innerHTML = ""; // Clear previous content
+        createOverallGraph(totalScore, checkboxScore, overallTotal);
+
+        const plotDiv = document.createElement('div');
+        plotDiv.id = "ternary-plot";
+        rightContainerDiv.appendChild(plotDiv);
+        updatePlot();
+    } // end if totalPercentage > 0
+} // end calculateWeightedAverage
+
+        
+        function updatePlot() {
+        const ternaryPlotElement = document.getElementById('ternary-plot');
+       
+        
+        // Ensure the element exists before trying to render the plot
+        if (!ternaryPlotElement) {
+            console.error("Ternary plot element #ternary-plot not found.");
+            return;
+        }
+        
+        
+        
+        var data = [{
+            type: 'scatterternary',
+            mode: 'markers',
+            a: samples.map(s => s.acidicOxides),
+            b: samples.map(s => s.basicOxides),
+            c: samples.map(s => s.otherOxides),
+            marker: {
+                size: 12,
+                color: samples.map(s => s.AFT),  // Use AFT directly for color scaling
+                colorscale: 'Jet',
+                colorbar: { title: "Fusion Temp (°C)" }  // Label in Celsius
+            },
+            text: samples.map(s => `Fusion Temp: ${parseFloat(s.AFT).toFixed(2)}°C`),  // Show Fusion Temp in Celsius on hover
+            hoverinfo: 'text'
+        }];
+        
+        var layout = {
+            margin: { l: 80, r: 60, t: 60, b: 50 },
+            ternary: {
+                sum: 100,
+                aaxis: { 
+                    title: { text: "Thermal Stability", font: { size: 12 } }, 
+                    showticklabels: true  // Ensure tick labels are displayed
+                },
+                baxis: { 
+                    title: { text: "Fusion Accelerator", font: { size: 12 } }, 
+                    showticklabels: true
+                    
+                },
+                caxis: { 
+                    title: { text: "Hardening Index", font: { size: 12 } }, 
+                    showticklabels: true,  
+                    title_standoff: 15 
+                }
+            }
+        };
+        
+        Plotly.newPlot(ternaryPlotElement, data, layout);
+        }
+        
+        
+        
+        function removeBlend(button) {
+            button.parentElement.remove(); 
+        }
+        
+// --- Initialization: no backend required (client-only) ---
+document.addEventListener('DOMContentLoaded', () => {
+  // ensure globals exist
+  window.coalData = window.coalData || [];       // will be filled from uploaded Excel
+  window.excelCoalMap = window.excelCoalMap || {}; // dates->rows map
+  // create one blank blend row so UI is ready
+  try { addBlend(); } catch(e){ console.warn('addBlend missing on load', e); }
+});
+
+        
+        
+        // function populateDropdown(selectElement) {
+        //     selectElement.innerHTML = '<option value="">Select Coal Type</option>';
+        //     window.coalData.forEach(coal => {
+        //     const opt = document.createElement('option');
+        //     opt.value = coal.id;            // <-- hidden unique key
+        //     opt.textContent = coal.transportId
+        //         ? `${coal.coalType} – ${coal.transportId}`
+        //         : coal.coalType;
+        //     selectElement.appendChild(opt);
+        // });
+        // }
+
+//         function populateDropdown(selectElement) {
+//     selectElement.innerHTML = '<option value="">Select Coal Type</option>';
+
+//     if (!Array.isArray(window.coalData)) {
+//         console.error("coalData is not an array:", window.coalData);
+//         return;
+//     }
+
+//     const sortedCoalData = [...window.coalData].sort((a, b) => {
+//         const aText = `${a?.coalType || ""} ${a?.transportId || ""}`.trim();
+//         const bText = `${b?.coalType || ""} ${b?.transportId || ""}`.trim();
+
+//         return aText.localeCompare(bText, undefined, { sensitivity: "base" });
+//     });
+
+//     sortedCoalData.forEach(coal => {
+//         if (!coal || coal.id == null) return;
+
+//         const opt = document.createElement('option');
+//         opt.value = coal.id;
+//         opt.textContent = coal.transportId
+//             ? `${coal.coalType || ""} – ${coal.transportId}`
+//             : (coal.coalType || "Unknown Coal");
+
+//         selectElement.appendChild(opt);
+//     });
+// }
+
+  function populateDropdown(selectElement) {
+  selectElement.innerHTML = '<option value="">Select Coal Type</option>';
+
+  // Ensure coalData is an array
+  if (!Array.isArray(window.coalData)) {
+    window.coalData = [];
+  }
+
+  // sort a shallow copy for stable order
+  const sortedCoalData = window.coalData.slice().sort((a, b) => {
+    const aText = `${a?.coalType || a?.coalName || ''} ${a?.transportId || ''}`.trim();
+    const bText = `${b?.coalType || b?.coalName || ''} ${b?.transportId || ''}`.trim();
+    return aText.localeCompare(bText, undefined, { sensitivity: 'base' });
+  });
+
+  sortedCoalData.forEach(coal => {
+    if (!coal) return;
+    const opt = document.createElement('option');
+    // use id if present, otherwise use coalName as fallback id
+    opt.value = (coal.id !== undefined && coal.id !== null) ? coal.id : coal.coalName;
+    opt.textContent = coal.transportId
+      ? `${coal.coalType || coal.coalName || ''} – ${coal.transportId}`
+      : (coal.coalType || coal.coalName || 'Unknown Coal');
+    selectElement.appendChild(opt);
+  });
+}
+      
+        
+// Replace the existing fetchCoalProperties(index) in date.html with this:
+function fetchCoalProperties(index) {
+    const selectedCoal = document.querySelector(`#coal${index}`).value;
+
+    if (!selectedCoal) {
+        alert("Please select a coal type first.");
+        return;
+    }
+
+    // try find by id first (id may be a number or string), then fall back to coalName/coalType/transportId
+    let coalInfo = (window.coalData || []).find(c => c && String(c.id) === String(selectedCoal));
+
+    if (!coalInfo) {
+        const selNorm = String(selectedCoal || '').toLowerCase().trim();
+        coalInfo = (window.coalData || []).find(c => {
+            if (!c) return false;
+            const candidates = [
+                String(c.coalName || '').toLowerCase().trim(),
+                String(c.coalType || '').toLowerCase().trim(),
+                String(c.transportId || '').toLowerCase().trim(),
+                String(c.id || '').toLowerCase().trim()
+            ];
+            return candidates.some(x => x && x === selNorm);
+        });
+    }
+
+    if (!coalInfo) {
+        alert("Properties not found for the selected coal.");
+        return;
+    }
+
+    // Build the properties table
+    let propertiesHTML = `
+        <table border="1" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="padding: 8px; border: 1px solid lightgray;">Property</th>
+                    <th style="padding: 8px; border: 1px solid lightgray;">Value</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    const p = coalInfo.properties || {};
+    for (const [key, value] of Object.entries(p)) {
+        propertiesHTML += `
+            <tr>
+                <td style="padding: 8px; border: 1px solid lightgray;">${key}</td>
+                <td style="padding: 8px; border: 1px solid lightgray;">${value}</td>
+            </tr>
+        `;
+    }
+
+    propertiesHTML += `</tbody></table>`;
+
+    document.getElementById("coalPropertiesContent").innerHTML = propertiesHTML;
+    document.getElementById("coalPropertiesModal").style.display = "block";
+}
+
+        
+        function closeModal() {
+            document.getElementById("coalPropertiesModal").style.display = "none";
+        }
+        
+        window.onclick = function(event) {
+            const modal = document.getElementById("coalPropertiesModal");
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        };
+//         document.getElementById("downloadPDF").addEventListener("click", function () {
+//   const { jsPDF } = window.jspdf;
+//   const element = document.body; // ✅ capture whole page including navbar
+
+//   html2canvas(element, {
+//     scale: 2,
+//     useCORS: true,
+//     onclone: (clonedDoc) => {
+//       // Handle input & textarea values
+//       const inputs = clonedDoc.querySelectorAll("input, textarea");
+//       inputs.forEach(input => {
+//         const text = clonedDoc.createElement("span");
+//         text.textContent = input.value;
+
+//         text.style.position = "absolute";
+//         text.style.left = input.offsetLeft + "px";
+//         text.style.top = input.offsetTop + "px";
+//         text.style.width = input.offsetWidth + "px";
+//         text.style.height = input.offsetHeight + "px";
+//         text.style.lineHeight = input.offsetHeight + "px";
+//         text.style.textAlign = "center";
+//         text.style.font = window.getComputedStyle(input).font;
+//         text.style.color = window.getComputedStyle(input).color;
+
+//         clonedDoc.body.appendChild(text);
+//         input.style.visibility = "hidden";
+//       });
+
+//       // Handle select dropdowns (coal names)
+//       const selects = clonedDoc.querySelectorAll("select");
+//       selects.forEach(select => {
+//         const selectedText = select.options[select.selectedIndex]?.text || "";
+//         const text = clonedDoc.createElement("span");
+//         text.textContent = selectedText;
+
+//         text.style.position = "absolute";
+//         text.style.left = select.offsetLeft + "px";
+//         text.style.top = select.offsetTop + "px";
+//         text.style.width = select.offsetWidth + "px";
+//         text.style.height = select.offsetHeight + "px";
+//         text.style.lineHeight = select.offsetHeight + "px";
+//         text.style.textAlign = "center";
+//         text.style.font = window.getComputedStyle(select).font;
+//         text.style.color = window.getComputedStyle(select).color;
+
+//         clonedDoc.body.appendChild(text);
+//         select.style.visibility = "hidden";
+//       });
+//     }
+//   }).then(canvas => {
+//     const imgData = canvas.toDataURL("image/png");
+//     const pdf = new jsPDF("p", "mm", "a4");
+
+//     const pageWidth = pdf.internal.pageSize.getWidth();
+//     const pageHeight = pdf.internal.pageSize.getHeight();
+
+//     const imgWidth = pageWidth;
+//     const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+//     let heightLeft = imgHeight;
+//     let position = 0;
+
+//     pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+//     heightLeft -= pageHeight;
+
+//     while (heightLeft > 0) {
+//       position = heightLeft - imgHeight;
+//       pdf.addPage();
+//       pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+//       heightLeft -= pageHeight;
+//     }
+
+//     pdf.save("Coal_Blending_Ratio.pdf");
+//   });
+// });
+ 
+    
+    </script>
+
+   <script>
+
+    
+
+async function callConsumeTrial() {
+  try {
+    const resp = await fetch('./consume-trial', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    const data = await resp.json().catch(() => ({}));
+
+    if (!resp.ok) {
+      // 401 -> not authenticated, 403 -> locked or forbidden
+      if (resp.status === 401) {
+        alert(data.error || 'Not authenticated. Please login.');
+        window.location.href = '/slagging';
+        return null;
+      }
+      if (resp.status === 403 && data.lockedUntil) {
+        // account locked
+        const lockedUntil = new Date(data.lockedUntil);
+        const msLeft = lockedUntil - new Date();
+        const hoursLeft = Math.ceil(msLeft / (1000 * 60 * 60));
+        alert(`Account locked. Try after ${hoursLeft} hour(s) (until ${lockedUntil.toLocaleString()}).`);
+        // Optionally redirect to login page
+        window.location.href = '/slagging';
+        return data;
+      }
+      // other errors:
+      console.warn('consume-trial error:', data);
+      alert(data.error || 'Could not consume trial. See console.');
+      return null;
+    }
+
+    // Success - update UI if an element exists
+    if (typeof data.trialsLeft !== 'undefined') {
+      const el = document.getElementById('trialsLeft');
+      if (el) el.textContent = String(data.trialsLeft);
+    }
+
+    if (data.lockedUntil) {
+      // The server locked the account in this response (trials reached zero)
+      const lockedUntil = new Date(data.lockedUntil);
+      alert('Trials exhausted. Account locked until ' + lockedUntil.toLocaleString());
+      // Session destroyed server-side; redirect to login
+      window.location.href = '/slagging';
+      return data;
+    }
+
+    // Return server response for further handling if caller needs it
+    return data;
+  } catch (err) {
+    console.error('callConsumeTrial failed', err);
+    alert('Network error while consuming trial.');
+    return null;
+  }
+}
+</script>
+
+</body>
+<!-- ====== START: COMMON NAVBAR (paste into each HTML file, right after <body>) ====== -->
+<style>
+/* Common navbar override (will replace previous styles visually) */
+:root{
+  --nav-h: 90px;
+  --nav-bg-start: rgba(255,255,255,0.96);
+  --nav-bg-end: rgba(245,247,255,0.88);
+  --nav-blue-1: #02126e;
+  --nav-blue-2: #0027a7;
+  --nav-text: #071a52;
+  --nav-btn-radius: 999px;
+}
+
+/* Strongly scoped to override older rules */
+.common-navbar-wrapper { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); z-index: 1300; }
+.common-navbar {
+  box-sizing: border-box;
+  height: 100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 8px 20px;
+  background: linear-gradient(180deg, var(--nav-bg-start), var(--nav-bg-end));
+  box-shadow: 0 8px 30px rgba(9,20,46,0.06);
+  border-bottom: 1px solid rgba(2,18,110,0.04);
+  backdrop-filter: blur(4px) saturate(1.02);
+  font-family: Inter, Arial, Helvetica, sans-serif;
+}
+
+/* Left: logo + title */
+.common-navbar .brand { display:flex; align-items:center; gap:12px; }
+.common-navbar .brand img { height:46px; width:auto; object-fit:contain; display:block; }
+.common-navbar .brand .title { font-weight:700; color:var(--nav-text); font-size:18px; margin:0; }
+
+/* Center/right: nav buttons */
+.common-navbar .nav-buttons { display:flex; gap:10px; align-items:center; margin-left:12px; }
+.common-navbar .nav-buttons button{
+  padding:8px 14px;
+  border-radius:var(--nav-btn-radius);
+  border: none;
+  font-weight:600;
+  cursor:pointer;
+  background: linear-gradient(180deg,var(--nav-blue-1),var(--nav-blue-2));
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(2,18,110,0.07);
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s;
+}
+.common-navbar .nav-buttons button:hover{ transform: translateY(-2px); }
+.common-navbar .nav-buttons button.logout-btn{
+  background: linear-gradient(180deg,#ff4b4b,#e32d2d) !important;
+  box-shadow: 0 8px 20px rgba(227,45,45,0.07);
+}
+
+/* Active page visual (different contrast + subtle outline) */
+.common-navbar .nav-buttons button.active {
+  background: linear-gradient(180deg,#ffffff, #f1f6ff) !important;
+  color: var(--nav-blue-2) !important;
+  box-shadow: 0 6px 18px rgba(2,18,110,0.06) !important;
+  border: 1px solid rgba(2,18,110,0.12);
+  transform: translateY(-1px) !important;
+}
+
+/* Mobile: make buttons smaller/wrapping */
+@media (max-width: 720px) {
+  .common-navbar { padding:10px 14px; }
+  .common-navbar .brand .title { font-size:15px; }
+  .common-navbar .nav-buttons { gap:6px; }
+  .common-navbar .nav-buttons button { padding:7px 10px; font-size:13px; }
+}
+
+/* push page content below navbar (only added if page doesn't already do it) */
+html body { --navbar-height: var(--nav-h); }
+
+/* FORCE custom select styling */
+.control-select {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+
+  display: inline-flex;
+  align-items: center;
+
+  height: 34px;                 /* slightly smaller than buttons */
+  min-width: 180px;
+
+  padding: 0 32px 0 10px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  line-height: 1;
+
+  color: #0b1a2b;
+  background-color: #ffffff;
+
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+
+  cursor: pointer;
+  box-sizing: border-box;
+
+  /* custom arrow */
+  background-image:
+    linear-gradient(45deg, transparent 50%, #6b7280 50%),
+    linear-gradient(135deg, #6b7280 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) center,
+    calc(100% - 11px) center;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+}
+
+
+/* main, .content, .toolbar-wrapper, #content, #coalForm { margin-top: calc(var(--navbar-height) + 12px) !important; } */
+</style>
+
+<div class="common-navbar-wrapper" role="navigation" aria-label="Main navigation">
+  <nav class="common-navbar">
+    <div class="brand" aria-hidden="false">
+      <img src="./images/abhitech-logo.png" alt="Abhitech logo">
+      <h1 class="title">Combustion Analyzer</h1>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div class="nav-buttons" role="menubar" aria-label="Primary">
+        <!-- important: use the exact filenames from your site -->
+        <button data-target="coal_table.html" title="Coal Properties">Coal Properties</button>
+        <button data-target="slagging_coal_page.html" title="Calculation">Calculation</button>
+        <button data-target="model.html" title="Model">Model</button>
+        <button data-target="date.html" title="About">Date Wise Analysis</button>
+      </div>
+
+      <div style="width:8px;"></div>
+
+      <!-- keep logout last -->
+      <div class="nav-buttons" aria-hidden="false">
+        <button class="logout-btn" id="common-logout-btn" title="Logout">Logout</button>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<script>
+/* Common navbar script: sets active button and wiring
+   Paste this JS as-is into each page (kept inline for simplicity).
+*/
+(function(){
+  // find nav buttons and add click behavior
+  const navBtns = Array.from(document.querySelectorAll('.common-navbar .nav-buttons button'))
+    .filter(b => b.dataset && b.dataset.target); // keep element buttons only
+
+  // mark active based on current path or filename
+  const path = (location.pathname || '').split('/').pop().toLowerCase();
+
+  let matched = false;
+  navBtns.forEach(btn => {
+    const target = (btn.dataset.target || '').toLowerCase();
+    // button click navigates (keeps behavior same)
+    btn.addEventListener('click', () => { if (target) location.href = target; });
+    // choose active when filenames match, or if path is empty, match model.html as default
+    if ((path && path === target) || (!path && target === 'model.html')) {
+      btn.classList.add('active');
+      matched = true;
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  // If no match found (e.g. URL rewrite), try to match by presence of page-specific id in body
+  if (!matched) {
+    const pageHints = ['coal', 'slag', 'model'];
+    for (const btn of navBtns) {
+      const t = btn.dataset.target || '';
+      for (const h of pageHints) {
+        if (t.indexOf(h) !== -1 && document.body.innerText.toLowerCase().includes(h)) {
+          btn.classList.add('active'); matched = true; break;
+        }
+      }
+      if (matched) break;
+    }
+  }
+
+  // logout behavior (matches earlier logout functions)
+  const logoutBtn = document.getElementById('common-logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      try { localStorage.setItem('isLoggedIn','false'); } catch(e) {}
+      // preserve existing logout pattern: redirect to login.html
+      window.location.href = './login.html';
+    });
+  }
+})();
+
+document.getElementById("downloadPDF").addEventListener("click", async function () {
+  const { jsPDF } = window.jspdf;
+  const PLOT_ID = 'ternary-plot';
+
+  // Render the Plotly ternary as PNG but first add visible text labels for Fusion Temp
+  async function renderPlotImage() {
+    const div = document.getElementById(PLOT_ID);
+    if (!div || !window.Plotly) return null;
+
+    const tIdx = 0; // first trace (assumes the ternary is the first trace)
+    const orig = {
+      mode: div.data?.[tIdx]?.mode,
+      text: div.data?.[tIdx]?.text,
+      textposition: div.data?.[tIdx]?.textposition,
+      textfont: div.data?.[tIdx]?.textfont
+    };
+
+    // Build text labels as "Fusion Temp: <value>°C" from the trace color or samples array
+    // Try marker.color first, fallback to samples global if available
+    let aftText = [];
+    try {
+      const marker = div.data?.[tIdx]?.marker || {};
+      const colorArr = Array.isArray(marker.color) ? marker.color : (window.samples ? window.samples.map(s => s.AFT) : []);
+      aftText = colorArr.map(c => (isFinite(c) ? `Fusion Temp: ${Math.round(c)}°C` : ''));
+    } catch (e) {
+      aftText = (window.samples || []).map(s => (isFinite(s.AFT) ? `Fusion Temp: ${Math.round(s.AFT)}°C` : ''));
+    }
+
+    try {
+      if (aftText.length) {
+        // temporarily add text + position so exported image shows the labels
+        await Plotly.restyle(div, {
+          mode: ['markers+text'],
+          text: [aftText],
+          textposition: ['top center'],
+          textfont: [{ size: 14, family: 'Arial, sans-serif', color: '#111' }]
+        }, [tIdx]);
+      }
+
+      // Export a high-res PNG of the plot (large dims so PDF remains crisp)
+      const png = await Plotly.toImage(div, { format: 'png', width: 1200, height: 900, scale: 2 });
+      return png;
+    } catch (err) {
+      console.warn('Plot export failed:', err);
+      return null;
+    } finally {
+      // restore original trace props so UI is unchanged
+      try {
+        await Plotly.restyle(div, {
+          mode: [orig.mode ?? 'markers'],
+          text: [orig.text ?? null],
+          textposition: [orig.textposition ?? null],
+          textfont: [orig.textfont ?? null]
+        }, [tIdx]);
+      } catch (ignore) {}
+    }
+  }
+
+  const plotPNG = await renderPlotImage();
+
+  // Snapshot the page, but replace interactive bits with visible text (selects, inputs, checkboxes)
+  const canvas = await html2canvas(document.body, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    foreignObjectRendering: true,
+    onclone: (clonedDoc) => {
+      // hide the download button from the PDF
+      const btn = clonedDoc.getElementById('downloadPDF');
+      if (btn) btn.style.display = 'none';
+
+      // helper to replace an element with an inline span that keeps dimensions
+      const replaceWithSpan = (el, text) => {
+        const cs = window.getComputedStyle(el);
+        const span = clonedDoc.createElement('span');
+        span.textContent = text || '';
+        // preserve basic sizing & font so layout remains similar
+        span.style.display = 'inline-block';
+        span.style.minWidth = (el.offsetWidth || 100) + 'px';
+        span.style.height = (el.offsetHeight || 24) + 'px';
+        span.style.lineHeight = (el.offsetHeight || 24) + 'px';
+        span.style.font = cs.font || '14px/1 Arial, sans-serif';
+        span.style.color = cs.color || '#111';
+        span.style.verticalAlign = 'middle';
+        span.style.whiteSpace = 'nowrap';
+        span.style.overflow = 'hidden';
+        span.style.textOverflow = 'ellipsis';
+        el.replaceWith(span);
+      };
+
+      // Replace inputs and textareas with their values
+      clonedDoc.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(input => {
+        replaceWithSpan(input, input.value || '');
+      });
+
+      // Replace checkboxes with a visible checkmark box
+      clonedDoc.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        const rect = cb.getBoundingClientRect();
+        const box = clonedDoc.createElement('span');
+        box.style.display = 'inline-block';
+        box.style.width = (rect.width || 18) + 'px';
+        box.style.height = (rect.height || 18) + 'px';
+        box.style.border = '1px solid #333';
+        box.style.borderRadius = '3px';
+        box.style.textAlign = 'center';
+        box.style.lineHeight = (rect.height || 18) + 'px';
+        box.textContent = cb.checked ? '✔' : '';
+        cb.replaceWith(box);
+      });
+
+      // SPECIAL: For each blend row - replace the select (coal name) + percent input with one inline labeled span
+      clonedDoc.querySelectorAll('.blend').forEach((blendEl, idx) => {
+        try {
+          const sel = blendEl.querySelector('select');
+          const inp = blendEl.querySelector('input[type="number"], input');
+          const selectedText = sel ? (sel.options[sel.selectedIndex]?.text || '') : '';
+          const percentText = inp ? (inp.value ? `${parseFloat(inp.value).toFixed(1)}%` : '') : '';
+          const combined = selectedText ? (percentText ? `${selectedText} — ${percentText}` : selectedText) : percentText;
+          // create a compact flex span to keep alignment same in PDF
+          const span = clonedDoc.createElement('span');
+          span.textContent = combined;
+          span.style.display = 'inline-block';
+          span.style.minWidth = ((sel?.offsetWidth || 140) + (inp?.offsetWidth || 60)) + 'px';
+          span.style.height = (sel?.offsetHeight || 32) + 'px';
+          span.style.lineHeight = (sel?.offsetHeight || 32) + 'px';
+          span.style.verticalAlign = 'middle';
+          span.style.font = window.getComputedStyle(sel || blendEl).font || '14px/1 Arial, sans-serif';
+          span.style.whiteSpace = 'nowrap';
+          span.style.overflow = 'hidden';
+          span.style.textOverflow = 'ellipsis';
+
+          // Replace select and input with the single span (replace select first then input if still present)
+          if (sel) sel.replaceWith(span);
+          if (inp && inp.parentNode) inp.parentNode.removeChild(inp);
+        } catch (e) { /* ignore per-row failure */ }
+      });
+
+      // Replace remaining selects generically if any left
+      clonedDoc.querySelectorAll('select').forEach(select => {
+        const selText = select.options[select.selectedIndex]?.text || '';
+        replaceWithSpan(select, selText);
+      });
+
+      // If we have a PNG snapshot of the ternary plot, swap the cloned plot container for the image
+      if (plotPNG) {
+        const clonedPlot = clonedDoc.getElementById(PLOT_ID);
+        if (clonedPlot) {
+          while (clonedPlot.firstChild) clonedPlot.removeChild(clonedPlot.firstChild);
+          const img = clonedDoc.createElement('img');
+          img.src = plotPNG;
+          img.style.width = '100%';
+          img.style.height = 'auto';
+          img.style.display = 'block';
+          clonedPlot.appendChild(img);
+        }
+      }
+    }
+  });
+
+  // Build the PDF (landscape A4, keep high quality)
+  const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+
+  // convert canvas to image and add to PDF (fit width, preserve aspect ratio)
+  const imgData = canvas.toDataURL("image/png");
+  const imgWidth = pageWidth - 8; // small margins
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+  let position = 4;
+  pdf.addImage(imgData, "PNG", 4, position, imgWidth, imgHeight);
+  let remainingHeight = imgHeight - (pageHeight - 8);
+
+  // paginate if needed
+  while (remainingHeight > 0) {
+    pdf.addPage();
+    pdf.addImage(imgData, "PNG", 4, position - (imgHeight - remainingHeight), imgWidth, imgHeight);
+    remainingHeight -= (pageHeight - 8);
+  }
+
+  pdf.save("Coal_Blending_Report.pdf");
+});
+// ---------- Excel upload + date-based fill (paste after your existing JS) ----------
+(function () {
+  const uploadBtn = document.getElementById('uploadBtn');
+  const fileInput = document.getElementById('excelFileInput');
+  const dateSelect = document.getElementById('dateSelect');
+
+  // Trigger file selector
+  uploadBtn.addEventListener('click', () => fileInput.click());
+
+  // Read file and parse
+// Read file and parse (replace existing handler with this block)
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    const sheetName = workbook.SheetNames[0];
+    const ws = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' }); // array of objects
+
+    if (!rows || rows.length === 0) {
+      alert('Excel appears empty.');
+      return;
+    }
+
+    // ----------------- helpers -----------------
+    function parsePercentValue(raw) {
+      if (raw === null || raw === undefined) return 0;
+      let s = String(raw).trim();
+      const isParen = /^\(.*\)$/.test(s);
+      // remove % and commas and extra whitespace
+      s = s.replace(/%/g, '').replace(/,/g, '').trim();
+      // keep digits, dot, minus
+      s = s.replace(/[^\d.\-]/g, '');
+      let n = parseFloat(s);
+      if (isNaN(n)) n = 0;
+      if (isParen) n = -Math.abs(n);
+      return n;
+    }
+
+    // normalize header detection
+    const headerKeys = Object.keys(rows[0] || {});
+    const findKey = (regexList) => headerKeys.find(h => regexList.some(r => new RegExp(r, 'i').test(h)));
+
+    const dateKey = findKey(['^date$','date','day','sample_date','dt','timestamp']);
+    const coalKey = findKey(['^coal$','coal','coalname','coal name','coal_type','name','coaltype','type']);
+    //const percentKey = findKey(['percent','percentage','%','percent_used','used','pct','value']);
+    // --------- SAFE percent column detection ---------
+let percentKey = null;
+
+// 1) strict matches first (best case)
+percentKey = headerKeys.find(h =>
+  /^(percent|percentage|pct|%|percent_used)$/i.test(h.trim())
+);
+
+// 2) relaxed matches, but explicitly NOT date columns
+if (!percentKey) {
+  percentKey = headerKeys.find(h =>
+    /(percent|percentage|pct|%)/i.test(h) &&
+    !/(date|day|time|timestamp)/i.test(h)
+  );
+}
+
+// 3) final safety check
+if (!percentKey || percentKey === dateKey) {
+  alert(
+    'Could not safely identify the Percent column.\n' +
+    'Detected headers: ' + headerKeys.join(', ')
+  );
+  return;
+}
+
+    if (!dateKey || !coalKey || !percentKey) {
+      alert('Could not detect Date / Coal / Percent columns in the uploaded file. Found headers: ' + headerKeys.join(', '));
+      return;
+    }
+
+    // ----------------- build maps -----------------
+    const map = {};            // dateStr -> [{ coalName, percent }]
+    const coalMaster = {};     // coalName -> { id, coalName, coalType, properties }
+
+    rows.forEach(r => {
+      // normalize date to YYYY-MM-DD where possible
+      const dateRaw = r[dateKey];
+      let ds;
+      if (dateRaw instanceof Date && !isNaN(dateRaw)) {
+        ds = dateRaw.toISOString().split('T')[0];
+      } else {
+        const parsed = new Date(dateRaw);
+        ds = (!isNaN(parsed)) ? parsed.toISOString().split('T')[0] : String(dateRaw).trim();
+      }
+
+      const coalName = String(r[coalKey] || '').trim();
+      if (!coalName) return; // skip blank coal rows
+
+      const percent = parsePercentValue(r[percentKey]);
+
+      if (!map[ds]) map[ds] = [];
+      map[ds].push({ coalName, percent });
+
+      // Build properties for this coal (first occurrence wins)
+      if (!coalMaster[coalName]) {
+        const props = {};
+        headerKeys.forEach(hdr => {
+          if (hdr === dateKey || hdr === coalKey || hdr === percentKey) return; // skip primary columns
+          const rawVal = r[hdr];
+          if (rawVal === '' || rawVal === undefined || rawVal === null) return;
+          // attempt numeric parse for property-like values (strip % and commas)
+          const cleaned = String(rawVal).replace(/%/g, '').replace(/,/g, '').trim();
+          const num = parseFloat(cleaned);
+          // use sanitized header name as key (trim)
+          const key = hdr.trim();
+          props[key] = (isNaN(num) ? rawVal : num);
+        });
+
+        coalMaster[coalName] = {
+          id: coalName,           // use coalName as id (no backend)
+          coalName,
+          coalType: coalName,
+          properties: props
+        };
+      }
+    });
+
+    // Expose globals consumed by the rest of the app
+// Expose globals consumed by the rest of the app
+window.excelCoalMap = map;
+window.coalData = Object.values(coalMaster); // array of coal objects
+
+// Try to call populateDateSelectFromExcel() if present (existing function in your page)
+if (typeof populateDateSelectFromExcel === 'function') {
+  try { populateDateSelectFromExcel(); } catch (err) { console.warn('populateDateSelectFromExcel failed', err); }
+} else {
+  // fallback: fill #dateSelect manually...
+  const dateSelect = document.getElementById('dateSelect');
+  if (dateSelect) {
+    const keys = Object.keys(map).sort();
+    dateSelect.innerHTML = '<option value="">Select Date</option>';
+    keys.forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = k;
+      dateSelect.appendChild(opt);
+    });
+  }
+}
+
+// **NEW** ensure the range selects are populated too
+if (typeof populateRangeSelects === 'function') {
+  try { populateRangeSelects(); } catch (e) { console.warn('populateRangeSelects failed', e); }
+}
+
+
+    const statusEl = document.getElementById('uploadStatus');
+    if (statusEl) statusEl.textContent = 'Excel parsed — ' + Object.keys(map).length + ' date(s) found.';
+    console.log('Excel parsed', { dates: Object.keys(map), coalCount: window.coalData.length });
+  } catch (err) {
+    console.error('Failed to parse Excel file', err);
+    alert('Failed to parse Excel file. See console for details.');
+  } finally {
+    // reset so same file can be re-selected
+    try { fileInput.value = ''; } catch(e){ /* ignore */ }
+  }
+});
+
+
+  // populate #dateSelect using window.excelCoalMap
+  function populateDateSelectFromExcel() {
+    const map = window.excelCoalMap || {};
+    const keys = Object.keys(map).sort();
+    dateSelect.innerHTML = '<option value="">Select Date</option>';
+    keys.forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = k;
+      dateSelect.appendChild(opt);
+    });
+    // auto-select first date if present
+    if (keys.length > 0) {
+      dateSelect.selectedIndex = 1;
+      onDateChange();
+    }
+  }
+
+  // When a date is selected - build blends from excel rows
+  async function onDateChange() {
+    const selected = dateSelect.value;
+    if (!selected) return;
+
+    const rows = (window.excelCoalMap && window.excelCoalMap[selected]) || [];
+    const blendRowContainer = document.querySelector('.blend-row');
+    // clear existing blends
+    blendRowContainer.innerHTML = '';
+
+    // For each row from Excel, create one blend row and set values
+    rows.forEach((r) => {
+      addBlend(); // uses your existing function to append a new .blend and populateDropdown
+      // find index of last created blend (addBlend uses current count as index)
+      const idx = document.querySelectorAll('.blend').length - 1;
+      const sel = document.getElementById(`coal${idx}`);
+      const percentInput = document.getElementById(`currentrange${idx}`);
+
+      // try to pick matching coal from window.coalData (match on coalType or transportId), case-insensitive
+      let matched = null;
+      if (Array.isArray(window.coalData)) {
+        const nameLower = r.coalName.toLowerCase();
+        matched = window.coalData.find(c => {
+          const candidates = [
+            String(c.coalType || '').toLowerCase(),
+            String(c.transportId || '').toLowerCase(),
+            String(c.coalName || '').toLowerCase()
+          ];
+          return candidates.some(x => x && x === nameLower);
+        });
+      }
+
+      if (matched) {
+        // set by id so calculateWeightedAverage finds the right properties
+        sel.value = matched.id;
+      } else {
+        // If no match, append a temporary option so the visible name shows
+        const tempOpt = document.createElement('option');
+        tempOpt.value = r.coalName;
+        tempOpt.textContent = r.coalName;
+        sel.appendChild(tempOpt);
+        sel.value = r.coalName;
+      }
+
+      percentInput.value = r.percent;
+      // ensure totals update
+      updateTotalRange();
+    });
+  }
+
+  dateSelect.addEventListener('change', onDateChange);
+
+  // If Excel was uploaded before coalData arrives, we still want to show dates.
+  // When coalData is loaded elsewhere in your script, call:
+  //    if (window.excelCoalMap) populateDateSelectFromExcel();
+  // We'll attempt to auto-call after your existing fetch completes by patching fetch success if possible:
+  const origOnLoad = window.onload;
+  window.onload = function () {
+    try { if (window.excelCoalMap) populateDateSelectFromExcel(); }
+    catch(e) { /* ignore */ }
+    if (typeof origOnLoad === 'function') origOnLoad();
+  };
+
+  // Also try to integrate with your existing fetch('/get_coal_types') flow:
+  // If your code sets window.coalData after an AJAX call (it does in date.html),
+  // call populateDateSelectFromExcel() afterwards to let excel-based rows match IDs.
+  // (No change needed here — we merely rely on the global values.)
+})();
+
+
+    
+   
+</script>
+<!-- ====== END: COMMON NAVBAR ====== -->
+ 
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<script>
+document.getElementById('templateBtn').addEventListener('click', function () {
+  // ---- DEFINE TEMPLATE HEADERS ----
+  const headers = [
+    'Coal Name',
+    'Date Used',
+    'Percent',
+    'SiO2',
+    'Al2O3',
+    'Fe2O3',
+    'CaO',
+    'MgO',
+    'Na2O',
+    'K2O',
+    'TiO2',
+    'SO3',
+    'P2O5',
+    'Mn3O4'
+  ];
+
+  // ---- CREATE EMPTY ROWS (user-friendly) ----
+  const rows = [
+    headers,
+    ['', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '', '', '', '', '', '', '']
+  ];
+
+  // ---- CREATE WORKBOOK ----
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // ---- OPTIONAL: column width for nicer look ----
+  ws['!cols'] = headers.map(h => ({
+    wch: Math.max(12, h.length + 2)
+  }));
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Coal_Data');
+
+  // ---- DOWNLOAD ----
+  XLSX.writeFile(wb, 'coal_data_template.xlsx');
+});
+
+
+
+/* ====== Range simulation + date-list highlight helpers ======
+   Insert after your excel parsing / populateDateSelectFromExcel code.
+   This code:
+   - fills the two range selects from the same dates used by dateSelect
+   - computes samples for each date in the chosen range (client-side deterministic AFT)
+   - populates a clickable date list box in the right panel and highlights a clicked date on the ternary plot
+*/
+
+// helper: get all date keys sorted
+
+
+function safeParseDate(str) {
+  if (!str) return null;
+
+  // try ISO first (YYYY-MM-DD)
+  let d = new Date(str);
+  if (!isNaN(d)) return d;
+
+  // try DD-MM-YYYY or DD/MM/YYYY
+  const parts = str.split(/[-\/]/);
+  if (parts.length === 3) {
+    let [p1, p2, p3] = parts;
+
+    // assume DD-MM-YYYY
+    if (p3.length === 4) {
+      return new Date(`${p3}-${p2}-${p1}`);
+    }
+  }
+
+  return null;
+}
+
+function getAllDatesSorted() {
+  const map = window.excelCoalMap || {};
+  return Object.keys(map).sort((a,b) => new Date(a) - new Date(b));
+}
+
+// fill the two range selects whenever date list is available
+function populateRangeSelects() {
+  const keys = getAllDatesSorted();
+  const s = document.getElementById('rangeStart');
+  const e = document.getElementById('rangeEnd');
+  if (!s || !e) return;
+  s.innerHTML = '<option value="">Start</option>';
+  e.innerHTML = '<option value="">End</option>';
+  keys.forEach(k => {
+    const o1 = document.createElement('option');
+    o1.value = k; o1.textContent = k;
+    const o2 = o1.cloneNode(true);
+    s.appendChild(o1); e.appendChild(o2);
+  });
+  if (keys.length) { s.selectedIndex = 1; e.selectedIndex = keys.length; }
+}
+
+// compute sample from rows (rows: array of {coalName, percent})
+// This mirrors your weighted-average logic but is self-contained and does not touch the DOM.
+function computeSampleFromRows(rows = [], dateLabel = '') {
+  // helper to normalize and find property value in a coal object (copied/adapted from your getPropValue)
+  function normalizeKeyForMatch(s) {
+    return String(s || '').toLowerCase()
+      .replace(/[₀₁₂₃₄₅₆₇₈₉]/g, d => ({'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9'}[d]))
+      .replace(/[^a-z0-9]/g, '');
+  }
+  function unicodeSubscriptsToDigits(s) {
+    return String(s || '').replace(/[₀₁₂₃₄₅₆₇₈₉]/g, ch => ({'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9'}[ch]||ch));
+  }
+  function getPropValue(coalInfo, prop) {
+    const p = (coalInfo && coalInfo.properties) || {};
+    if (!p) return 0;
+    if (p[prop] !== undefined) return Number(p[prop]) || 0;
+    const ascii = unicodeSubscriptsToDigits(prop);
+    if (p[ascii] !== undefined) return Number(p[ascii]) || 0;
+    const simple = String(prop).replace(/[%\s\(\)_\-]/g,'').replace(/₂/g,'2').replace(/₃/g,'3');
+    if (p[simple] !== undefined) return Number(p[simple]) || 0;
+    const target = normalizeKeyForMatch(prop);
+    for (const key of Object.keys(p)) {
+      if (normalizeKeyForMatch(key) === target) return Number(p[key]) || 0;
+    }
+    // fallback: numeric parse if any key contains token
+    for (const key of Object.keys(p)) {
+      if (normalizeKeyForMatch(key).includes(target) || target.includes(normalizeKeyForMatch(key))) {
+        const n = Number(p[key]);
+        if (!isNaN(n)) return n;
+      }
+    }
+    return 0;
+  }
+
+  // properties we care about (same set your code uses)
+  const propertySums = { "SiO₂":0,"Al₂O₃":0,"Fe₂O₃":0,"CaO":0,"MgO":0,"Na₂O":0,"K₂O":0,"TiO₂":0,"SO₃":0,"P₂O₅":0,"Mn₃O₄":0,"Sulphur (S)":0 };
+  let totalPercent = 0;
+
+  rows.forEach(r => {
+    const name = String(r.coalName || r.coal || '').trim();
+    const pct = Number(r.percent || r.percent === 0 ? r.percent : (r.Percent || 0)) || 0;
+    if (!name || pct === 0) return;
+    totalPercent += Math.abs(pct);
+    // find matching coal entry in your window.coalData (id or coalName)
+    let matched = null;
+    if (Array.isArray(window.coalData)) {
+      const low = name.toLowerCase();
+      matched = window.coalData.find(c => {
+        const candidates = [String(c.coalType||''), String(c.transportId||''), String(c.coalName||''), String(c.id||'')];
+        return candidates.some(x => String(x||'').toLowerCase() === low);
+      });
+    }
+    // if matched use its properties; if not, leave zeros (or if rows contain oxide columns they'd need mapping, but excel parsing already makes coalMaster)
+    for (const prop in propertySums) {
+      const v = getPropValue(matched || {properties:{}}, prop);
+      propertySums[prop] += (v * pct);
+    }
+  });
+
+  if (totalPercent === 0) return null;
+
+  // compute weighted averages
+  const SIO = propertySums["SiO₂"]/totalPercent;
+  const ALO = propertySums["Al₂O₃"]/totalPercent;
+  const FEO = propertySums["Fe₂O₃"]/totalPercent;
+  const CAO = propertySums["CaO"]/totalPercent;
+  const MGO = propertySums["MgO"]/totalPercent;
+  const NAO = propertySums["Na₂O"]/totalPercent;
+  const KO  = propertySums["K₂O"]/totalPercent;
+  const TIO = propertySums["TiO₂"]/totalPercent;
+  const SO  = propertySums["SO₃"]/totalPercent;
+  const PO  = propertySums["P₂O₅"]/totalPercent;
+  const S   = propertySums["Sulphur (S)"]/totalPercent;
+  const MNO = propertySums["Mn₃O₄"]/totalPercent;
+
+  // Local deterministic AFT fallback (no backend). Tweak coefficients if you want.
+  function computeLocalAFT(SIO, ALO, FEO, CAO, MGO, NAO, KO, SO, TIO) {
+    const aft = 1200
+      + (SIO || 0) * 0.8
+      - (SO || 0) * 4.5
+      + (CAO || 0) * 0.6
+      + (FEO || 0) * 0.3
+      - (NAO || 0) * 0.35
+      + (TIO || 0) * 0.18;
+    return Math.round(aft * 100) / 100;
+  }
+  const predictedAFT = computeLocalAFT(SIO, ALO, FEO, CAO, MGO, NAO, KO, SO, TIO);
+
+  // compute the three ternary axes (acidic/basic/other) — keep same grouping you used
+  let acidic = (SIO || 0) + (ALO || 0) + (TIO || 0);
+  let basic  = (CAO || 0) + (MGO || 0) + (NAO || 0) + (KO || 0);
+  let other  = (FEO || 0) + (SO || 0) + (PO || 0) + (MNO || 0);
+
+  // scale to sum 100
+  const totalABC = acidic + basic + other;
+  if (totalABC === 0) return null;
+  acidic = acidic / totalABC * 100;
+  basic  = basic  / totalABC * 100;
+  other  = other  / totalABC * 100;
+
+  return {
+    acidicOxides: acidic,
+    basicOxides: basic,
+    otherOxides: other,
+    AFT: predictedAFT,
+    date: dateLabel
+  };
+}
+
+// create or refresh the right-side date list box (clickable)
+function populateDateListBox(processedDates = []) {
+  const containerId = 'dateListBox';
+  let box = document.getElementById(containerId);
+  if (!box) {
+    box = document.createElement('div');
+    box.id = containerId;
+    box.className = 'control-card';
+    box.style.marginTop = '12px';
+    box.innerHTML = '<div class="control-title">Processed Dates (click to highlight)</div><div id="dateListItems"></div>';
+    const right = document.getElementById('resultsContainer');
+    if (right) right.insertBefore(box, right.firstChild);
+  }
+  const list = document.getElementById('dateListItems');
+  list.innerHTML = '';
+  const keys = getAllDatesSorted();
+  keys.forEach(k => {
+    const el = document.createElement('div');
+    el.style.display = 'flex';
+    el.style.justifyContent = 'space-between';
+    el.style.alignItems = 'center';
+    el.style.padding = '6px 8px';
+    el.style.borderBottom = '1px solid rgba(0,0,0,0.04)';
+    el.style.cursor = 'pointer';
+    el.textContent = k;
+    el.title = 'Click to highlight on ternary plot';
+    el.onclick = () => highlightDateOnPlot(k);
+    // badge to indicate processed
+    const badge = document.createElement('span');
+    badge.style.padding = '2px 8px';
+    badge.style.borderRadius = '999px';
+    badge.style.fontSize = '12px';
+    badge.style.fontWeight = 700;
+    badge.style.color = '#fff';
+    badge.textContent = processedDates.includes(k) ? 'OK' : '—';
+    badge.style.background = processedDates.includes(k) ? '#16a34a' : '#9ca3af';
+    el.appendChild(badge);
+    list.appendChild(el);
+  });
+}
+
+// updatePlot: modify marker sizes/lines according to selectedDate
+let highlightedDate = null;
+function highlightDateOnPlot(dateStr) {
+  highlightedDate = dateStr;
+  updatePlot(); // reuse your existing plotting function (we override marker arrays here)
+}
+
+// new runRange: builds samples for date range and updates plot + list
+async function runRangeSimulation() {
+  const start = document.getElementById('rangeStart').value;
+  const end   = document.getElementById('rangeEnd').value;
+  if (!start || !end) { alert('Please select both start and end dates.'); return; }
+const startDate = safeParseDate(start);
+const endDate = safeParseDate(end);
+
+if (!startDate || !endDate) {
+  alert("Invalid date format");
+  return;
+}
+
+const keys = getAllDatesSorted().filter(k => {
+  const d = safeParseDate(k);
+  if (!d) return false;
+  return d >= startDate && d <= endDate;
+});
+
+  if (!keys.length) { alert('No dates in selected range.'); return; }
+
+  const processed = [];
+  const newSamples = [];
+
+  // process each date sequentially (fast, client-side)
+  for (const d of keys) {
+    const rows = (window.excelCoalMap && window.excelCoalMap[d]) || [];
+    const sample = computeSampleFromRows(rows, d);
+    if (sample) {
+      processed.push(d);
+      newSamples.push(sample);
+    }
+  }
+
+  // store to the global samples (so your existing UI/plot code still works)
+  window.samples = newSamples;
+  // refresh plot and date list
+  // populateDateListBox(processed);
+  updatePlot();
+  alert(`Simulated ${processed.length} date(s) and updated the plot.`);
+  document.getElementById("calculateBtn").click(); // trigger any existing calculations you have after plot update  
+}
+
+// patch your existing updatePlot to honor highlightedDate and date labels.
+// If you already have updatePlot defined, this function will replace it — otherwise it will create one.
+// It reads window.samples (array of {acidicOxides,basicOxides,otherOxides,AFT,date})
+function updatePlot() {
+  const ternaryPlotElement = document.getElementById('ternary-plot');
+  if (!ternaryPlotElement) return;
+  const s = window.samples || [];
+
+  const a = s.map(x => x.acidicOxides);
+  const b = s.map(x => x.basicOxides);
+  const c = s.map(x => x.otherOxides);
+  const colorVals = s.map(x => x.AFT);
+  const texts = s.map(x => `${x.date} — Fusion Temp: ${parseFloat(x.AFT).toFixed(2)}°C`);
+  const sizes = s.map(x => (highlightedDate && x.date === highlightedDate) ? 18 : 10);
+  const lineWidths = s.map(x => (highlightedDate && x.date === highlightedDate) ? 3 : 0.5);
+  const lineColors = s.map(x => (highlightedDate && x.date === highlightedDate) ? '#000' : '#333');
+
+  const data = [{
+    type: 'scatterternary',
+    mode: 'markers',
+    a: a, b: b, c: c,
+    marker: {
+      size: sizes,
+      color: colorVals,
+      colorscale: 'Jet',
+      colorbar: { title: "Fusion Temp (°C)" },
+      line: {
+        width: lineWidths,
+        color: lineColors
+      }
+    },
+    text: texts,
+    hoverinfo: 'text'
+  }];
+
+  const layout = {
+    margin: { l: 80, r: 60, t: 60, b: 50 },
+    ternary: {
+      sum: 100,
+      aaxis: { title: { text: "Thermal Stability", font: { size: 12 } } },
+      baxis: { title: { text: "Fusion Accelerator", font: { size: 12 } } },
+      caxis: { title: { text: "Hardening Index", font: { size: 12 } }, title_standoff: 15 }
+    }
+  };
+
+  // use newPlot for deterministic redraw
+  Plotly.newPlot(ternaryPlotElement, data, layout);
+}
+
+// wire the UI
+document.getElementById('runRangeBtn').addEventListener('click', runRangeSimulation);
+
+// call populateRangeSelects whenever dateSelect is populated
+// your code already auto-calls populateDateSelectFromExcel(); we attach a small observer:
+(function attachRangeInit() {
+  populateRangeSelects();
+  // whenever excelCoalMap changes, refresh selects (safe to call multiple times)
+  const orig = window.populateDateSelectFromExcel;
+  window.populateDateSelectFromExcel = function() {
+    try { if (typeof orig === 'function') orig(); } catch(e) {}
+    populateRangeSelects();
+    populateDateListBox([]); // create placeholder list
+  };
+})();
+
+</script>
+
+</html>

@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Compare Models — Combustion Analyzer</title>
+<link rel="icon" href="./images/abhitech-logo.png">
+<!-- Optional: Inter font for premium look -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+:root{
+  --primary:#02008a;
+  --bg:#f4f6fa;
+  --card:#fff;
+  --accent-1: linear-gradient(90deg,#02126e,#0027a7);
+  --glass: rgba(255,255,255,0.6);
+  --success:#24b47e;
+  --danger:#ff5c5c;
+  --muted:#7b88a8;
+  --radius:14px;
+}
+html,body{
+  margin:0;
+  font-family: 'Inter', Inter, Arial, sans-serif;
+  background:var(--bg);
+  color:#122;
+}
+main{
+  padding:30px;
+  padding-top:140px;
+  max-width:1200px;
+  margin:auto;
+}
+.card{
+  background:var(--card);
+  border-radius:12px;
+  padding:20px;
+  box-shadow:0 8px 24px rgba(0,0,0,.05);
+}
+.page-title{
+  margin:0 0 20px 0;
+  color:var(--primary);
+  font-size:22px;
+}
+.toolbar{
+  display:flex;
+  gap:15px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+input[type="file"]{
+  padding:6px;
+}
+button{
+  padding:8px 16px;
+  border:none;
+  border-radius:10px;
+  background:linear-gradient(180deg,#02126e,#0027a7);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(2,16,138,0.12);
+}
+button:hover{ opacity:.95; transform: translateY(-1px); transition: .15s; }
+.loader{
+  display:none;
+  font-size:14px;
+  color:#555;
+}
+
+/* Progress area */
+.progress-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit,minmax(230px,1fr));
+  gap:14px;
+  margin-top:18px;
+}
+.model-card{
+  background: linear-gradient(180deg,#ffffff, #fbfdff);
+  border-radius:var(--radius);
+  padding:12px;
+  box-shadow:0 10px 30px rgba(2,18,56,0.06);
+  display:flex;
+  gap:12px;
+  align-items:center;
+  border:1px solid rgba(2,18,56,0.04);
+}
+.model-left{
+  width:86px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+.model-meta{
+  flex:1;
+}
+.model-title{
+  font-weight:700;
+  font-size:14px;
+  color:#0b1a4a;
+}
+.model-status{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:6px;
+}
+.progress-bar-wrap{
+  margin-top:10px;
+}
+.progress-bar{
+  height:10px;
+  background:linear-gradient(90deg,#f0f3ff,#f8fbff);
+  border-radius:999px;
+  overflow:hidden;
+  border:1px solid rgba(2,18,56,0.03);
+}
+.progress-inner{
+  height:100%;
+  width:0%;
+  background: linear-gradient(90deg,#02126e,#0027a7);
+  border-radius:999px;
+  transition: width 300ms linear;
+}
+.progress-percent{
+  font-size:12px;
+  text-align:right;
+  margin-top:6px;
+  color:#102046;
+}
+
+/* status badges */
+.badge{
+  display:inline-block;
+  padding:6px 8px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+  color:#fff;
+  background:rgba(0,0,0,0.06);
+}
+.badge.running{ background: linear-gradient(90deg,#ffb347,#ff6b6b); }
+.badge.loading{ background: linear-gradient(90deg,#6dd5ed,#2193b0); }
+.badge.success{ background: var(--success); }
+.badge.error{ background: var(--danger); }
+.badge.idle{ background:#9aa3bf; color:#fff; }
+
+/* table */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+  background:#fff;
+}
+th{
+  background:#02008a;
+  color:#fff;
+  padding:10px;
+}
+td{
+  padding:10px;
+  border-bottom:1px solid #eee;
+  text-align:center;
+}
+tr.best{
+  background:#e6f9ed;
+  font-weight:700;
+}
+
+/* NAVBAR */
+:root{
+  --nav-h:90px;
+}
+.common-navbar-wrapper{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:var(--nav-h);
+  z-index:1300;
+}
+.common-navbar{
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 20px;
+  background:linear-gradient(180deg,#ffffff,#f5f7ff);
+  box-shadow:0 8px 30px rgba(0,0,0,.06);
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.brand img{
+  height:46px;
+  border-radius:8px;
+}
+.brand .title{
+  font-weight:700;
+  font-size:18px;
+  color:#071a52;
+}
+.nav-buttons{
+  display:flex;
+  gap:10px;
+}
+.nav-buttons button{
+  border-radius:999px;
+  padding:8px 14px;
+}
+.nav-buttons button.active{
+  background:#fff !important;
+  color:#0027a7 !important;
+  border:1px solid rgba(0,0,0,.1);
+}
+.logout-btn{
+  background:linear-gradient(180deg,#ff4b4b,#e32d2d)!important;
+}
+.small-muted{
+  font-size:13px;
+  color:#6b7280;
+  margin-left:8px;
+}
+.footer-note{
+  margin-top:18px;
+  color:#6b7280;
+  font-size:13px;
+}
+.file-upload{
+  font-family: 'Inter', Arial, sans-serif;
+  font-size:14px;
+  color:#1a1a1a;
+}
+
+/* Style the upload button */
+.file-upload::file-selector-button{
+  margin-right:12px;
+  padding:10px 18px;
+  border:none;
+  border-radius:10px;
+  background:linear-gradient(180deg,#02126e,#0027a7);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(2,16,138,0.12);
+  transition:all .15s ease;
+}
+
+/* Hover effect */
+.file-upload::file-selector-button:hover{
+  transform:translateY(-1px);
+  opacity:.95;
+}
+
+/* Add upload icon */
+.file-upload::file-selector-button::before{
+  content:"⬆ ";
+  font-size:15px;
+}
+.upload-area{
+  border:2px dashed #cfd6f6;
+  border-radius:12px;
+  padding:22px 28px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  cursor:pointer;
+  background:#fafbff;
+  transition:all .2s ease;
+  position:relative;
+}
+
+.upload-area:hover{
+  border-color:#0027a7;
+  background:#f4f6ff;
+}
+
+.upload-icon{
+  font-size:30px;
+}
+
+.upload-text strong{
+  color:#071a52;
+  font-size:15px;
+}
+
+.upload-sub{
+  font-size:13px;
+  color:#7b88a8;
+}
+
+/* hide real input but keep functionality */
+#csvFile{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  cursor:pointer;
+}
+.train-mode-toggle{
+  display:flex;
+  background:#eef1ff;
+  border-radius:12px;
+  padding:4px;
+  gap:4px;
+}
+
+.mode-option{
+  position:relative;
+  cursor:pointer;
+}
+
+.mode-option input{
+  display:none;
+}
+
+.mode-option span{
+  display:block;
+  padding:8px 14px;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:600;
+  color:#02126e;
+  transition:all .2s ease;
+}
+
+.mode-option input:checked + span{
+  background:linear-gradient(180deg,#02126e,#0027a7);
+  color:#fff;
+  box-shadow:0 4px 12px rgba(2,16,138,0.25);
+}
+</style>
+</head>
+<body>
+
+<div class="common-navbar-wrapper">
+<nav class="common-navbar">
+  <div class="brand">
+    <img src="./images/abhitech-logo.png" alt="logo">
+    <h1 class="title">Combustion Analyzer</h1>
+  </div>
+
+  <div style="display:flex;gap:15px;align-items:center;">
+    <div class="nav-buttons">
+      <button data-target="coal_table.html">Coal Properties</button>
+      <button data-target="slagging_coal_page.html">Calculation</button>
+      <button data-target="model.html">Model</button>
+      <button data-target="date.html">Date Wise Analysis</button>
+      <button data-target="compare_models.html" class="active">Compare Models</button>
+    </div>
+    <div class="nav-buttons">
+      <button class="logout-btn" id="logoutBtn">Logout</button>
+    </div>
+  </div>
+</nav>
+</div>
+
+<main>
+<div class="card">
+<h2 class="page-title">Compare Models</h2>
+
+<div id="activeModelBox" style="
+  margin-bottom:15px;
+  padding:14px 18px;
+  border-radius:12px;
+  background:linear-gradient(90deg,#eef2ff,#f8faff);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border:1px solid rgba(0,0,0,0.05);
+">
+
+  <div>
+    <div style="font-size:13px;color:#6b7280;">Currently Active Model</div>
+    <div id="activeModelName" style="font-size:16px;font-weight:700;color:#02126e;">
+      Loading...
+    </div>
+  </div>
+
+  <div id="activeModelBadge" class="badge loading">loading</div>
+
+</div>
+
+<div class="toolbar">
+  <div class="upload-area" id="uploadArea">
+  
+  <div class="upload-icon">📤</div>
+  
+  <div class="upload-text">
+    <strong>Upload CSV File or Excel File</strong>
+    <div class="upload-sub">Drag & drop or click to browse</div>
+  </div>
+
+  <input type="file" id="csvFile" accept=".csv,.xlsx,.xls">
+
+</div>
+
+<div class="small-muted" id="fileNameText">
+No file selected
+</div>
+<div class="train-mode-toggle">
+  <label class="mode-option">
+    <input type="radio" name="trainMode" value="new" checked>
+    <span>New Data Only</span>
+  </label>
+
+  <label class="mode-option">
+    <input type="radio" name="trainMode" value="append">
+    <span>Old + New Data</span>
+  </label>
+</div>
+
+<button id="runBtn">Run Comparison</button>
+  <button id="downloadCSVTemplateBtn">CSV Template</button>
+  <button id="downloadExcelTemplateBtn">Excel Template</button>
+  <div id="loader" class="loader">Running models...</div>
+</div>
+
+<!-- Progress area (generated dynamically) -->
+<div id="progressArea" class="progress-grid" style="display:none;"></div>
+
+<div id="result"></div>
+
+<!-- <div class="footer-note">Tip: Upload a CSV and click <strong>Run Comparison</strong> to start model evaluation. Each model shows live progress while server computes.</div> -->
+
+</div>
+</main>
+
+<script>
+/* Navigation & logout (unchanged) */
+document.querySelectorAll('[data-target]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    window.location.href = btn.dataset.target;
+  });
+});
+document.getElementById('logoutBtn').addEventListener('click',()=>{
+  localStorage.setItem('isLoggedIn','false');
+  window.location.href='login.html';
+});
+
+
+const csvInput = document.getElementById("csvFile");
+const fileText = document.getElementById("fileNameText");
+
+csvInput.addEventListener("change", function () {
+  if (this.files.length) {
+    fileText.textContent = "Selected: " + this.files[0].name;
+  } else {
+    fileText.textContent = "No file selected";
+  }
+});
+
+/* Model list (placeholders shown while server runs) */
+const ALL_MODELS = [
+  { key: 'pureRF', name: 'Pure RF' },
+  { key: 'hybridRF', name: 'Hybrid RF' },
+  { key: 'baseFormula', name: 'Base Formula' },
+  { key: 'ann', name: 'ANN' },
+  { key: 'pure_xgb', name: 'Pure XGBoost' },
+  { key: 'hybrid_xgb', name: 'Hybrid XGBoost' }
+];
+
+
+document.getElementById('downloadCSVTemplateBtn').addEventListener('click', function () {
+
+  const header = "CoalName,SiO2,Al2O3,Fe2O3,CaO,MgO,Na2O,K2O,SO3,TiO2,P2O5,S,AFT\n";
+
+  const blob = new Blob([header], { type: "text/csv;charset=utf-8;" });
+
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "aft_template.csv";
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+});
+
+
+document.getElementById('downloadExcelTemplateBtn').addEventListener('click', function () {
+
+  const data = [
+    ["CoalName","SiO2","Al2O3","Fe2O3","CaO","MgO","Na2O","K2O","SO3","TiO2","P2O5","S","AFT"]
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(wb, ws, "Template");
+
+  XLSX.writeFile(wb, "aft_template.xlsx");
+
+});
+
+
+/* Keep track of each model's UI and animation interval */
+const modelState = {}; // { key: { percent, interval, chart, elRefs... } }
+
+function createModelCard(model){
+  const container = document.createElement('div');
+  container.className = 'model-card';
+  container.id = 'card-'+model.key;
+
+  container.innerHTML = `
+    <div class="model-left">
+      <canvas id="chart-${model.key}" width="86" height="86" style="max-width:86px;"></canvas>
+    </div>
+    <div class="model-meta">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div class="model-title">${model.name}</div>
+          <div id="status-${model.key}" class="model-status">Waiting</div>
+        </div>
+        <div id="badge-${model.key}" class="badge idle">idle</div>
+      </div>
+
+      <div class="progress-bar-wrap">
+        <div class="progress-bar">
+          <div id="inner-${model.key}" class="progress-inner" style="width:0%"></div>
+        </div>
+        <div class="progress-percent" id="pct-${model.key}">0%</div>
+      </div>
+    </div>
+  `;
+  return container;
+}
+
+/* Create donut chart (Chart.js) for a model */
+function initDonutChart(modelKey){
+  const ctx = document.getElementById('chart-'+modelKey).getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [0, 100],
+        backgroundColor: ['#02126e', '#f1f4ff'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      cutout: '72%',
+      responsive: false,
+      animation: { duration: 300 },
+      tooltips: { enabled: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false },
+      }
+    }
+  });
+  return chart;
+}
+
+/* Start simulated progress for all cards (until server responds) */
+function startProgressSimulation(){
+  document.getElementById('progressArea').style.display = 'grid';
+
+  ALL_MODELS.forEach(m=>{
+    if (modelState[m.key]) return;
+    const card = createModelCard(m);
+    document.getElementById('progressArea').appendChild(card);
+
+    const chart = initDonutChart(m.key);
+    modelState[m.key] = {
+      percent: 0,
+      interval: null,
+      chart,
+      refs: {
+        inner: document.getElementById('inner-'+m.key),
+        pct: document.getElementById('pct-'+m.key),
+        status: document.getElementById('status-'+m.key),
+        badge: document.getElementById('badge-'+m.key)
+      }
+    };
+
+    // start randomized progress increments
+    const step = () => {
+      const s = modelState[m.key];
+      if (!s) return;
+      // increment by random small amount, but cap at 88-94 so it doesn't reach 100 before server
+      const cap = 88 + Math.floor(Math.random()*7); // 88..94
+      const inc = 1 + Math.floor(Math.random()*6); // 1..6
+      s.percent = Math.min(s.percent + inc, cap);
+      s.refs.inner.style.width = s.percent + '%';
+      s.refs.pct.textContent = s.percent + '%';
+      // update donut
+      s.chart.data.datasets[0].data[0] = s.percent;
+      s.chart.data.datasets[0].data[1] = 100 - s.percent;
+      s.chart.update();
+      // set status/badge to "Loading" / "Running" randomly
+      s.refs.status.textContent = s.percent < 40 ? 'Initializing' : (s.percent < 80 ? 'Running' : 'Finalizing');
+      s.refs.badge.className = 'badge ' + (s.percent < 40 ? 'loading' : (s.percent < 95 ? 'running' : 'loading'));
+      s.refs.badge.textContent = s.refs.status.textContent.toLowerCase();
+    };
+    step();
+    const id = setInterval(step, 450 + Math.floor(Math.random()*400));
+    modelState[m.key].interval = id;
+  });
+}
+
+/* Stop simulation and optionally mark states; used when response or error occurs */
+function stopSimulationAndMark(resultsMap){
+  // resultsMap: object with keys matching ALL_MODELS keys, value: { success:bool, stats:... } or null if not run
+  ALL_MODELS.forEach(m=>{
+    const s = modelState[m.key];
+    if (!s) return;
+    clearInterval(s.interval);
+    // if we have results for this model, show success with 100%
+    if (resultsMap && resultsMap[m.key]){
+      s.percent = 100;
+      s.refs.inner.style.width = '100%';
+      s.refs.pct.textContent = '100%';
+      s.chart.data.datasets[0].data[0] = 100;
+      s.chart.data.datasets[0].data[1] = 0;
+      s.chart.update();
+      s.refs.status.textContent = 'Completed';
+      s.refs.badge.className = 'badge success';
+      s.refs.badge.textContent = 'completed';
+    } else {
+      // not returned by server -> mark as idle/na
+      s.refs.status.textContent = 'Not executed';
+      s.refs.badge.className = 'badge idle';
+      s.refs.badge.textContent = 'idle';
+      s.refs.inner.style.background = 'linear-gradient(90deg,#9aa3bf,#c5cbe0)';
+      s.refs.pct.textContent = (s.percent>0? s.percent+'%':'0%');
+      // dim donut (set to current percent but greyed)
+      s.chart.data.datasets[0].backgroundColor = ['#9aa3bf','#eef1f6'];
+      s.chart.update();
+    }
+  });
+}
+
+/* Attach main run handler */
+document.getElementById('runBtn').addEventListener('click', runComparison);
+
+
+async function fetchActiveModel() {
+  const nameEl = document.getElementById("activeModelName");
+  const badgeEl = document.getElementById("activeModelBadge");
+
+  try {
+    badgeEl.className = "badge loading";
+    badgeEl.textContent = "loading";
+
+    const res = await fetch('/api/get-active-model');
+    const data = await res.json();
+
+    console.log("Active model API response:", data); // 🔍 debug
+
+    if (!data.success) {
+      throw new Error("API failed");
+    }
+
+    // ✅ mapping (make sure keys EXACTLY match backend)
+    const map = {
+      pure_rf: "Pure RF",
+      hybrid_rf: "Hybrid RF",
+      base_formula: "Base Formula",
+      ann: "ANN",
+      pure_xgb: "Pure XGBoost",
+      hybrid_xgb: "Hybrid XGBoost"
+    };
+
+    const modelKey = data.model?.toLowerCase().trim();
+
+    nameEl.textContent = map[modelKey] || modelKey || "Unknown";
+
+    badgeEl.className = "badge success";
+    badgeEl.textContent = "active";
+
+  } catch (err) {
+    console.error("Active model fetch error:", err);
+
+    nameEl.textContent = "Unable to fetch";
+    badgeEl.className = "badge error";
+    badgeEl.textContent = "error";
+  }
+}
+
+
+async function runComparison(){
+  const fileInput=document.getElementById('csvFile');
+  if(!fileInput.files.length){
+    alert("Please upload CSV file or Excel file");
+    return;
+  }
+
+  // reset previous UI
+  document.getElementById('result').innerHTML='';
+  const progressArea = document.getElementById('progressArea');
+  progressArea.innerHTML = '';
+  progressArea.style.display = 'none';
+
+  // show loader text
+  const loader=document.getElementById('loader');
+  loader.style.display='inline-block';
+
+  // create UI cards and start progress sim BEFORE sending request to keep user engaged
+  startProgressSimulation();
+
+  const formData=new FormData();
+  formData.append('file',fileInput.files[0]);
+  const trainMode = document.querySelector('input[name="trainMode"]:checked').value;
+  formData.append("trainMode", trainMode);
+
+  let fetchResponse, data;
+  try{
+    // Start fetch (don't await the whole response before animation — but we still await so code flow is simple)
+    const resPromise = fetch('./api/compare-models',{
+      method:'POST',
+      body:formData
+    });
+
+    // Await the response
+    fetchResponse = await resPromise;
+    // Try to parse JSON
+    data = await fetchResponse.json();
+  }catch(err){
+    // Network or parse error: stop simulations and show error states
+    loader.style.display='none';
+    stopSimulationAndMark(null);
+    alert("Request failed or server unreachable.");
+    return;
+  }
+
+  loader.style.display='none';
+
+  if(!data || !data.success){
+    stopSimulationAndMark(null);
+    alert("Server returned an error or no data.");
+    return;
+  }
+
+  // Build a map of which models returned
+  const r = data.results || {};
+  const resultsMap = {}; // keys correspond to ALL_MODELS keys
+  // mapping server keys to our model keys
+  if (r.pureRF || r.pureRF === 0 || r.pureRF === null) resultsMap.pureRF = { stats: r.pureRF };
+  if (r.hybridRF || r.hybridRF === 0 || r.hybridRF === null) resultsMap.hybridRF = { stats: r.hybridRF };
+  if (r.baseFormula || r.baseFormula === 0 || r.baseFormula === null) resultsMap.baseFormula = { stats: r.baseFormula };
+  if (r.ann || r.ANN || r.ann === 0) resultsMap.ann = { stats: r.ann || r.ANN };
+  if (r.pure_xgb && r.pure_xgb.stats) resultsMap.pure_xgb = { stats: r.pure_xgb.stats };
+  if (r.hybrid_xgb && r.hybrid_xgb.stats) resultsMap.hybrid_xgb = { stats: r.hybrid_xgb.stats };
+
+  // Stop progress simulation and mark which ones succeeded
+  stopSimulationAndMark(resultsMap);
+
+  // Build the result table as before (keeps previous logic)
+  const models = [];
+
+  // RF Models
+  if (r.pureRF) models.push({ name: "Pure RF", data: r.pureRF });
+  if (r.hybridRF) models.push({ name: "Hybrid RF", data: r.hybridRF });
+  if (r.baseFormula) models.push({ name: "Base Formula", data: r.baseFormula });
+  if (r.ann || r.ANN) models.push({ name: "ANN", data: r.ann || r.ANN });
+
+  // XGBoost Models (Python)
+  if (r.pure_xgb && r.pure_xgb.stats)
+    models.push({ name: "Pure XGBoost", data: r.pure_xgb.stats });
+
+  if (r.hybrid_xgb && r.hybrid_xgb.stats)
+    models.push({ name: "Hybrid XGBoost", data: r.hybrid_xgb.stats });
+
+  if (!models.length) {
+    alert("No model results returned.");
+    return;
+  }
+
+  let best = models[0];
+  models.forEach(m => {
+    if (m.data && best.data && m.data.avgAbs < best.data.avgAbs) {
+      best = m;
+    }
+  });
+
+  let table=`<table>
+    <tr>
+      <th>Model</th>
+      <th>Rows</th>
+      <th>MAE</th>
+      <th>Max Error</th>
+      <th>Min Error</th>
+      <th>>20</th>
+      <th>>40</th>
+      <th>>60</th>
+    </tr>`;
+
+  models.forEach(m=>{
+    const cls=(m.name===best.name)?"class='best'": "";
+    table+=`<tr ${cls}>
+      <td>${m.name}</td>
+      <td>${m.data.rows}</td>
+      <td>${m.data.avgAbs}</td>
+      <td>${m.data.maxError}</td>
+      <td>${m.data.minError}</td>
+      <td>${m.data.gt20}</td>
+      <td>${m.data.gt40}</td>
+      <td>${m.data.gt60}</td>
+    </tr>`;
+  });
+
+  table += `</table>
+
+  <div style="margin-top:25px; padding:20px; border-top:1px solid #eee;">
+    <h3 style="margin-bottom:15px;">Activate Model</h3>
+
+    <select id="activateModelSelect" style="padding:8px 12px; border-radius:8px; border:1px solid #ccc; min-width:220px;">
+      <option value="">Select Model</option>
+      <option value="pure_rf">Pure RF (Production)</option>
+      <option value="hybrid_rf">Hybrid RF (Formula + RF)</option>
+      <option value="base_formula">Base Formula</option>
+      <option value="ann">ANN</option>
+      <option value="pure_xgb">Pure XGBoost (pure_xgb)</option>
+      <option value="hybrid_xgb">Hybrid XGBoost (hybrid_xgb)</option>
+    </select>
+
+    <button id="activateBtn" style="margin-left:15px;">Activate Now</button>
+
+    <div id="activateLoader" style="margin-top:10px; display:none; font-size:14px; color:#555;">
+      Activating model...
+    </div>
+  </div>
+  `;
+
+  document.getElementById('result').innerHTML = table;
+
+  // Attach event
+  document.getElementById('activateBtn').addEventListener('click', activateSelectedModel);
+}
+
+/* Activate model (unchanged logic, minor CSS hooking) */
+async function activateSelectedModel() {
+  const model = document.getElementById('activateModelSelect').value;
+
+  if (!model) {
+    alert("Please select a model to activate.");
+    return;
+  }
+
+  if (!confirm("This will overwrite the current active model. Continue?")) {
+    return;
+  }
+
+  const loader = document.getElementById('activateLoader');
+  loader.style.display = 'block';
+
+  try {
+const userId = localStorage.getItem("user_id"); // or wherever you store it
+console.log("Sending activation:", {
+  modelName: model,
+  user_id: userId
+});
+const res = await fetch('./api/activate-model', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    modelName: model,
+    user_id: userId
+  })
+});
+
+    const data = await res.json();
+    loader.style.display = 'none';
+
+    if (!data.success) {
+      alert("Activation failed: " + data.message);
+      return;
+    }
+
+    alert("Model activated successfully!");
+    fetchActiveModel();
+  }
+  catch (err) {
+    loader.style.display = 'none';
+    alert("Server error during activation.");
+  }
+}
+
+fetchActiveModel();
+</script>
+
+</body>
+</html>

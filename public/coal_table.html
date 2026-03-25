@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>AEL-Combustion Analyzer</title>
+    <link rel="icon" href="images/abhitech-logo.png">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+
+/* ================= ROOT ================= */
+
+:root {
+  --primary-1: #0b3bff;
+  --primary-2: #02008a;
+}
+
+/* ================= BASE ================= */
+
+body {
+  margin:0;
+  padding:0;
+  font-family:Arial,sans-serif;
+  font-size:14px;
+  color:#111827;
+}
+
+/* ================= NAVBAR ================= */
+
+.navbar{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  height:72px;
+  padding:10px 22px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(250,251,255,.86));
+  box-shadow:0 10px 30px rgba(9,20,46,.06);
+  z-index:1100;
+}
+
+.navbar img{
+  height:46px;
+  object-fit:contain;
+  margin-right:12px;
+}
+
+.navbar h1{
+  font-weight:700;
+  font-size:18px;
+  color:var(--primary-2);
+  margin:0 14px;
+}
+
+.nav-buttons{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.nav-buttons button{
+  padding:8px 14px;
+  border-radius:999px;
+  border:none;
+  font-weight:600;
+  cursor:pointer;
+  background:linear-gradient(180deg,var(--primary-1),var(--primary-2));
+  color:#fff;
+}
+
+.nav-buttons .logout-btn{
+  background:linear-gradient(180deg,#ff4b4b,#e32d2d);
+}
+
+/* ================= PAGE ================= */
+
+h1.page-title{
+  margin-top:100px;
+  text-align:center;
+  font-size:20px;
+}
+
+/* ================= TOOLBAR (FIXED) ================= */
+
+.toolbar-wrapper{
+  margin-top:18px;
+  padding:0 16px;
+  display:flex;
+  justify-content:center;
+}
+
+.toolbar{
+  width:calc(100% - 32px);
+  max-width:none;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.left-group,
+.right-group{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+.right-group{
+  margin-left:auto;
+}
+
+/* ================= BUTTONS ================= */
+
+button{
+  padding:10px 14px;
+  border-radius:8px;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+  box-shadow:0 3px 8px rgba(0,0,0,.08);
+  transition:.12s;
+  background:#e5e7eb;
+}
+
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+  box-shadow:none;
+}
+
+.btn-template{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;}
+.btn-upload{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;}
+.btn-delete{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;}
+.btn-download{background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;}
+
+/* ================= TABLE WRAPPER ================= */
+
+.table-wrapper{
+  margin:16px;
+  padding:0px;
+  border-radius:10px;
+  background:linear-gradient(180deg,rgba(2,0,138,.02),transparent 40%);
+  position:relative;
+  max-height:calc(100vh - 200px);
+  overflow-y:auto!important;
+  overflow-x:auto!important;
+}
+
+/* ================= TABLE ================= */
+
+table{
+  width:100%;
+  min-width:900px;
+  border-collapse:collapse;
+  background:#fff;
+  border-radius:8px;
+  box-shadow:0 4px 18px rgba(2,6,23,.04);
+  overflow:visible!important;
+}
+
+/* ================= STICKY HEADER ================= */
+
+thead{
+  position:sticky;
+  top:0;
+  z-index:90;
+}
+
+thead th{
+  position:static;
+  top:0;
+  z-index:100;
+  background:var(--primary-2);
+  color:#fff;
+  padding:12px 10px;
+  text-align:center;
+  font-weight:700;
+  white-space:nowrap;
+  box-shadow:0 4px 10px rgba(0,0,0,.15);
+}
+
+/* ================= BODY ================= */
+
+tbody td{
+  padding:10px 12px;
+  text-align:center;
+  border-bottom:1px solid #eef2f7;
+    position: relative;
+  z-index: 1;
+}
+
+tbody tr:nth-child(even){background:#fbfdff;}
+tbody tr:hover{background:#f1f5f9;}
+tbody tr{background:#fff;}
+
+/* ================= FIRST COLUMN (FIXED) ================= */
+
+thead th:first-child{
+  position:sticky;
+  left:0;
+  z-index:70;
+  background:var(--primary-2);
+}
+
+tbody td:first-child{
+  position:sticky;
+  left:0;
+  z-index:40;
+  background:#fff;
+  box-shadow:2px 0 6px rgba(0,0,0,.08);
+  font-weight:700;
+}
+
+/* ================= LAST COLUMN ================= */
+
+thead th:last-child,
+tbody td:last-child{
+  width:86px;
+  min-width:86px;
+  max-width:130px;
+}
+
+/* ================= FILE ================= */
+
+#fileInput{display:none;}
+
+/* ================= DOWNLOAD MENU ================= */
+
+.download-dropdown{position:relative;}
+
+.download-dropdown .dropdown-menu{
+  position:absolute;
+  top:calc(100% + 6px);
+  left:0;
+  display:none;
+  background:#fff;
+  padding:6px;
+  border-radius:8px;
+  box-shadow:0 8px 20px rgba(0,0,0,.12);
+  z-index:2000;
+  min-width:170px;
+}
+
+/* ================= MODAL ================= */
+
+#edit-modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:3000;
+  padding:18px;
+}
+
+#edit-modal{
+  background:#fff;
+  border-radius:10px;
+  width:760px;
+  max-width:96%;
+  max-height:90vh;
+  display:flex;
+  flex-direction:column;
+  box-shadow:0 12px 40px rgba(0,0,0,.25);
+  overflow:hidden;
+}
+
+#edit-form-fields{
+  padding:10px 18px;
+  overflow-y:auto;
+  max-height:calc(80vh - 160px);
+}
+
+#edit-modal .field-row{
+  display:flex;
+  gap:10px;
+  margin-bottom:10px;
+  align-items:center;
+}
+
+#edit-modal label{
+  width:140px;
+  font-weight:700;
+  font-size:13px;
+}
+
+#edit-modal input{
+  flex:1;
+  padding:8px 10px;
+  border-radius:8px;
+  border:1px solid #e6e6e6;
+}
+
+#edit-modal .modal-actions{
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+  padding:12px 18px;
+  border-top:1px solid #f1f5f9;
+}
+
+/* ================= COAL DROPDOWN ================= */
+
+.coal-dropdown-body{
+  position:absolute;
+  min-width:220px;
+  max-width:420px;
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:8px;
+  box-shadow:0 10px 30px rgba(2,6,23,.12);
+  z-index:99999;
+  font-size:14px;
+  overflow:hidden;
+}
+
+.coal-dropdown-body .cd-input{
+  width:100%;
+  padding:8px 10px;
+  border:none;
+  border-bottom:1px solid #eee;
+  font-weight:600;
+}
+
+.coal-dropdown-body .cd-list{
+  list-style:none;
+  margin:0;
+  padding:6px;
+  max-height:260px;
+  overflow:auto;
+}
+
+.coal-dropdown-body .cd-item{
+  padding:8px 10px;
+  cursor:pointer;
+  border-radius:6px;
+}
+
+.coal-dropdown-body .cd-item:hover,
+.coal-dropdown-body .cd-item.active{
+  background:#f3f6fb;
+}
+
+
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:900px){
+  table{min-width:760px;font-size:13px;}
+  .toolbar{padding:0 8px;}
+}
+
+@media(max-width:480px){
+  #edit-modal label{width:110px;font-size:12px;}
+  #edit-form-fields{padding:8px 12px;}
+}
+
+</style>
+
+</head>
+<body>
+
+
+<div id="edit-modal-backdrop" aria-hidden="true">
+  <div id="edit-modal" role="dialog" aria-modal="true">
+
+    <h3>Edit Coal Properties</h3>
+
+    <div id="edit-form-fields"></div>
+
+    <div class="modal-actions">
+      <button id="edit-cancel-btn" type="button">Cancel</button>
+      <button id="edit-save-btn" type="button" class="btn-upload">
+        Save changes
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ================= Page Title ================= -->
+
+<h1 class="page-title">Slagging Data Table</h1>
+
+
+<!-- ================= Toolbar ================= -->
+
+<div class="toolbar-wrapper">
+  <div class="toolbar">
+
+    <!-- Left controls -->
+    <div class="left-group">
+
+      <button
+        id="btn-download-template"
+        class="btn-template"
+        type="button"
+      >
+        Download Template
+      </button>
+
+      <button
+        id="btn-upload"
+        class="btn-upload"
+        type="button"
+      >
+        📤 Upload New Data
+      </button>
+
+      <input
+        id="fileInput"
+        type="file"
+        accept=".xlsx,.xls"
+      >
+
+      <!-- Search -->
+      <input
+        id="searchInput"
+        type="search"
+        placeholder="Search coal name..."
+        style="padding:8px 10px;border-radius:8px;border:1px solid #ddd;min-width:220px;"
+      >
+
+      <button
+        id="searchBtn"
+        class="btn-template"
+        type="button"
+      >
+        Search
+      </button>
+
+    </div>
+
+
+    <!-- Right controls -->
+    <div class="right-group">
+
+      <!-- Download selected -->
+      <div class="download-dropdown">
+
+        <button
+          id="download-selected-btn"
+          class="btn-download"
+          type="button"
+          disabled
+        >
+          Download Selected ▾
+        </button>
+
+        <div
+          id="download-menu"
+          class="dropdown-menu"
+          aria-hidden="true"
+        >
+          <button type="button" onclick="downloadSelected('excel')">
+            Download as Excel
+          </button>
+
+          <button type="button" onclick="downloadSelected('pdf')">
+            Download as PDF
+          </button>
+        </div>
+
+      </div>
+
+
+      <!-- Actions -->
+      <button
+        id="delete-selected-btn"
+        class="btn-delete"
+        type="button"
+        disabled
+      >
+        Delete Selected
+      </button>
+
+      <button
+        id="edit-selected-btn"
+        class="btn-upload"
+        type="button"
+        disabled
+      >
+        Edit Selected
+      </button>
+
+      <button
+        id="downloadWholePDFBtn"
+        class="btn-download"
+        type="button"
+      >
+        Download whole page as PDF
+      </button>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ================= Data Table ================= -->
+
+<div class="table-wrapper">
+
+  <table
+    id="data-table"
+    role="table"
+    aria-label="coal data table"
+  >
+
+    <thead>
+      <tr id="table-header"></tr>
+    </thead>
+
+    <tbody id="table-body"></tbody>
+
+  </table>
+
+</div>
+
+<script>
+
+    // --- Edit flow state ---
+let latestSelectedId = null; // keep the latest-checked primary id
+
+function handleCheckboxChange(e) {
+  const cb = e.target;
+  const id = cb.getAttribute('data-id') || '';
+  if (cb.checked) {
+    // mark latest when checked
+    latestSelectedId = id;
+  } else {
+    // if user unchecked the latest, move latestSelectedId to the last checked checkbox (if any)
+    if (latestSelectedId === id) {
+      const checked = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'));
+      latestSelectedId = checked.length ? checked[checked.length - 1].getAttribute('data-id') : null;
+    }
+  }
+  updateSelectionButtons(); // reuse existing enable/disable behaviour
+}
+
+// enhance existing updateSelectionButtons to enable Edit button
+function updateSelectionButtons() {
+  const checked = document.querySelectorAll('input[type="checkbox"]:checked');
+  const deleteBtn = document.getElementById('delete-selected-btn');
+  const downloadBtn = document.getElementById('download-selected-btn');
+  const editBtn = document.getElementById('edit-selected-btn');
+
+  const any = checked.length > 0;
+  if (deleteBtn) deleteBtn.disabled = !any;
+  if (downloadBtn) downloadBtn.disabled = !any;
+  if (editBtn) editBtn.disabled = !any;
+
+  // if something selected but latestSelectedId is null (e.g. table re-render), set it to last checked
+  if (any && !latestSelectedId) {
+    const last = checked[checked.length - 1];
+    latestSelectedId = last ? last.getAttribute('data-id') : null;
+  }
+}
+
+// open modal and populate fields for the chosen row object
+function openEditModal(rowObj, originalOid) {
+  const backdrop = document.getElementById('edit-modal-backdrop');
+  const fieldsDiv = document.getElementById('edit-form-fields');
+  fieldsDiv.innerHTML = '';
+
+  if (!rowObj) rowObj = {};
+  if (rowObj.coalId === undefined) rowObj.coalId = '';
+
+  const preferred = ['coalId','coal','name','SiO2','Al2O3','Fe2O3','CaO','MgO','Na2O','K2O','TiO2','SO3','P2O5','Mn3O4','Sulphur','GCV','cost','Transport ID','shipmentDate'];
+
+  const keysSet = new Set(Object.keys(rowObj));
+  keysSet.delete('_id');
+  keysSet.delete('__v');
+
+  const orderedPreferred = preferred.filter(k => k === 'coalId' || rowObj[k] !== undefined);
+  const remaining = Array.from(keysSet).filter(k => !orderedPreferred.includes(k));
+  const ordered = orderedPreferred.concat(remaining);
+
+  // helper: map unicode subscripts to normal digits and trim spaces, lowercase for comparisons
+  const subToNormal = {'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9'};
+  function normalizeKey(k='') { return String(k).split('').map(ch => subToNormal[ch] || ch).join('').replace(/\s+/g,''); }
+  function normLower(k=''){ return normalizeKey(k).toLowerCase(); }
+
+  // sets (use lowercased normalized keys)
+  const oxideFieldsLower = new Set(['sio2','al2o3','fe2o3','cao','mgo','na2o','k2o','tio2','so3','p2o5','mn3o4']);
+  const twoDecimalExtraLower = new Set(['sulphur','sulphurs','s']); // include variations you have
+  const costFieldsLower = new Set(['gcv','cost']); // display rules special for these
+
+  // helper to format numbers for input display:
+  // - oxides and twoDecimalExtra -> up to 2 decimals, trailing zeros trimmed but show at most 2 digits
+  // - cost/gcv -> use existing formatCellValue (so integers show without .00)
+  function formatForInputDisplay(raw, normLowerKey) {
+    // try numeric
+    const maybeNum = Number(String(raw).replace(/,/g,''));
+    if (!Number.isNaN(maybeNum) && isFinite(maybeNum)) {
+      // cost-like fields -> use formatCellValue so integers don't get .00
+      if (costFieldsLower.has(normLowerKey)) {
+        return formatCellValue(maybeNum);
+      }
+      // oxides or sulphur -> round to 2 decimals and trim trailing zeros (up to 2 decimals)
+      if (oxideFieldsLower.has(normLowerKey) || twoDecimalExtraLower.has(normLowerKey)) {
+        const rounded = Math.round(maybeNum * 100) / 100;
+        // if integer, show integer; else show up to 2 decimals trimmed
+        if (Math.abs(rounded - Math.round(rounded)) < 1e-9) return String(Math.round(rounded));
+        return rounded.toFixed(2).replace(/\.?0+$/, '');
+      }
+      // fallback numeric default: use formatCellValue
+      return formatCellValue(maybeNum);
+    }
+    // non-numeric -> return as-is
+    return String(raw === null || raw === undefined ? '' : raw);
+  }
+
+  // helper to compute numeric value to send to server:
+  // - we will convert numeric strings to numbers and round oxides to 2 decimals before sending
+  function numericForSave(raw, normLowerKey) {
+    const maybeNum = Number(String(raw).replace(/,/g,''));
+    if (!Number.isNaN(maybeNum) && isFinite(maybeNum)) {
+      // round oxides/2-decimals to 2 decimals
+      if (oxideFieldsLower.has(normLowerKey) || twoDecimalExtraLower.has(normLowerKey)) {
+        return Math.round(maybeNum * 100) / 100;
+      }
+      // otherwise keep numeric but round to 2 decimals to be safe for backend (you can change)
+      return Math.round(maybeNum * 100) / 100;
+    }
+    return raw;
+  }
+
+  // build inputs
+  ordered.forEach(k => {
+    const safeKey = String(k);
+    let val = rowObj[k];
+    if (val === null || val === undefined) val = '';
+    const row = document.createElement('div');
+    row.className = 'field-row';
+
+    const normL = normLower(safeKey);
+
+    // Decide input type
+    if (oxideFieldsLower.has(normL) || twoDecimalExtraLower.has(normL) || costFieldsLower.has(normL)) {
+      // Use number inputs for these keys
+      const displayVal = formatForInputDisplay(val, normL);
+      row.innerHTML = `<label>${safeKey}</label><input data-field="${safeKey}" type="number" step="any" value="${String(displayVal).replace(/"/g,'&quot;')}">`;
+    } else {
+      // default text input
+      row.innerHTML = `<label>${safeKey}</label><input data-field="${safeKey}" type="text" value="${String(val).replace(/"/g,'&quot;')}">`;
+    }
+
+    fieldsDiv.appendChild(row);
+  });
+
+  // After fields exist, add blur formatting to inputs so they normalize when user leaves the field
+  Array.from(fieldsDiv.querySelectorAll('input[data-field]')).forEach(inp => {
+    const k = inp.getAttribute('data-field');
+    const normL = normLower(k);
+    // on blur, format the displayed value to match rules
+    inp.addEventListener('blur', (e) => {
+      const raw = inp.value;
+      // if numeric-like, format appropriately
+      const formatted = formatForInputDisplay(raw, normL);
+      inp.value = formatted;
+    });
+    // optional: on focus, keep raw full value (do nothing)
+  });
+
+  // show modal
+  backdrop.style.display = 'flex';
+  backdrop.setAttribute('aria-hidden','false');
+
+  // cancel
+  document.getElementById('edit-cancel-btn').onclick = () => {
+    backdrop.style.display = 'none';
+    backdrop.setAttribute('aria-hidden','true');
+  };
+
+  // save
+  document.getElementById('edit-save-btn').onclick = async () => {
+    const inputs = Array.from(fieldsDiv.querySelectorAll('input[data-field]'));
+    const updates = {};
+    inputs.forEach(inp => {
+      const k = inp.getAttribute('data-field');
+      const v = inp.value.trim();
+      const normL = normLower(k);
+      if (v === '') { updates[k] = null; return; }
+      // if numeric-like, convert and round where necessary
+      const maybeNum = Number(String(v).replace(/,/g,''));
+      if (!Number.isNaN(maybeNum) && isFinite(maybeNum)) {
+        updates[k] = numericForSave(maybeNum, normL);
+      } else {
+        updates[k] = v;
+      }
+    });
+
+    const idType = (rowObj.coalId !== undefined && rowObj.coalId !== null && String(rowObj.coalId).trim() !== '') ? 'coalId' : (rowObj._id ? '_id' : 'coalId');
+    const idValue = (idType === 'coalId') ? (rowObj.coalId || latestSelectedId) : (rowObj._id || '');
+
+    try {
+      const res = await fetch('./update-coal', {
+        method: 'PATCH',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ idType, idValue, updates })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || JSON.stringify(json));
+      alert('Updated successfully');
+      backdrop.style.display = 'none';
+      backdrop.setAttribute('aria-hidden','true');
+      if (updates.coalId !== undefined && updates.coalId !== null) {
+        latestSelectedId = String(updates.coalId);
+      }
+      fetchData();
+    } catch (err) {
+      console.error('update error', err);
+      alert('Update failed: ' + String(err.message || err));
+    }
+  };
+}
+
+
+// Edit button click handler: pick the latestSelectedId item (or last checked) and open modal
+document.getElementById('edit-selected-btn').addEventListener('click', function(){
+  const checked = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'));
+  if (checked.length === 0) { alert('Select a row to edit'); return; }
+  // choose latestSelectedId or fallback to last checked
+  const chosenId = latestSelectedId || checked[checked.length - 1].getAttribute('data-id');
+  // find the checkbox element with that data-id
+  const targetCb = checked.find(cb => cb.getAttribute('data-id') === chosenId) || checked[checked.length - 1];
+  const row = (targetCb && targetCb.dataset && targetCb.dataset.row) ? JSON.parse(targetCb.dataset.row || "{}") : {};
+  const oid = targetCb.getAttribute('data-oid') || (row._id ? row._id : null);
+  openEditModal(row, oid);
+});
+
+    // Simple auth check (kept)
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+        // keep but don't aggressively block in case of testing
+        // alert('You must login first!');
+        // window.location.href = '/login.html';
+    }
+
+    // ---------- helpers ----------
+// ----------------- replace the old formatCellValue with this -----------------
+function formatCellValue(value) {
+    if (value === null || value === undefined) return "";
+
+    // helper: try convert to number (allow strings with commas)
+    function toNumber(v) {
+        if (typeof v === "number" && isFinite(v)) return v;
+        if (typeof v === "string") {
+            const t = v.trim();
+            if (t === "") return null;
+            const n = Number(t.replace(/,/g, ""));
+            return (!Number.isNaN(n) && isFinite(n)) ? n : null;
+        }
+        return null;
+    }
+
+    const n = toNumber(value);
+    if (n !== null) {
+        // integer -> show no decimals
+        if (Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
+        // otherwise show up to 2 decimals but trim trailing zeros (e.g. 3.5 -> 3.5 ; 3.50 -> 3.5)
+        const rounded = Math.round(n * 100) / 100;
+        return rounded.toFixed(2).replace(/\.?0+$/, '');
+    }
+
+    // fallback for non-numeric strings / objects
+    if (typeof value === 'string') return value;
+    try { return JSON.stringify(value); } catch(e) { return String(value); }
+}
+
+
+    // ---------- fetch and render ----------
+let cachedData = [];
+
+// fetchData caches the rows and applies current search filter
+function fetchData() {
+    fetch("./fetch-data")
+        .then(r => r.json())
+        .then(data => {
+            cachedData = Array.isArray(data) ? data : [];
+            // if search box has a value, apply it, otherwise display all
+            const q = (document.getElementById('searchInput') ? document.getElementById('searchInput').value : '') || '';
+            applySearchAndDisplay(q);
+        })
+        .catch(err => console.error("fetch error", err));
+}
+
+// Search/filter logic: exact -> startsWith -> contains
+function applySearchAndDisplay(rawQuery) {
+    const q = (rawQuery || '').trim().toLowerCase();
+    if (!q) {
+        return displayTable(cachedData);
+    }
+
+    // attempt exact full name match (coal or name)
+    const exact = cachedData.filter(r => {
+        const name = ((r.coal || r.name || r['Coal'] || '') + '').toLowerCase();
+        return name === q;
+    });
+    if (exact.length) return displayTable(exact);
+
+    const starts = [];
+    const contains = [];
+
+    cachedData.forEach(r => {
+        const name = ((r.coal || r.name || r['Coal'] || '') + '').toLowerCase();
+        if (!name) return;
+        if (name.startsWith(q)) starts.push(r);
+        else if (name.includes(q)) contains.push(r);
+    });
+
+    displayTable(starts.concat(contains));
+}
+
+    // prefer explicit coalId field for the first column (Coal ID)
+    function getCoalIdFromRow(r) {
+        if (!r) return '';
+        if (r.coalId !== undefined && r.coalId !== null && String(r.coalId).trim() !== '') return String(r.coalId);
+        if (r['Coal ID'] !== undefined && r['Coal ID'] !== null && String(r['Coal ID']).trim() !== '') return String(r['Coal ID']);
+        // fallback only if absolutely necessary
+        if (r._id) return String(r._id);
+        return '';
+    }
+
+function displayTable(data) {
+    const headerRow = document.getElementById('table-header');
+    const tbody = document.getElementById('table-body');
+    headerRow.innerHTML = '';
+    tbody.innerHTML = '';
+
+    if (!data || data.length === 0) {
+        headerRow.innerHTML = '<th>No data</th>';
+        return;
+    }
+
+    // normalize subscript unicode to digits for matching
+    const subToNormal = {'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9'};
+    function normalizeKey(k='') {
+        if (!k) return '';
+        // replace unicode subscript digits with normal digits and remove spaces
+        return String(k).split('').map(ch => subToNormal[ch] || ch).join('').replace(/\s+/g,'');
+    }
+
+    // oxide set we want to render with subscripts (add any others you need)
+    const oxideSet = new Set(['SiO2','Al2O3','Fe2O3','CaO','MgO','Na2O','K2O','TiO2','SO3','P2O5','Mn3O4']);
+
+    // convert a label to HTML with <sub> for digits (safe because labels are known keys)
+    function labelWithSubscripts(label) {
+        if (!label) return '';
+        const norm = normalizeKey(label);
+        if (!oxideSet.has(norm)) return String(label);
+        return String(norm).replace(/(\d)/g, '<sub>$1</sub>');
+    }
+
+    // Collect all keys present across rows (exclude __v)
+    const keySet = new Set();
+    data.forEach(d => Object.keys(d).forEach(k => { if (k !== '__v') keySet.add(k); }));
+
+    // Preferred order; we'll show "Coal ID" as first visible column always
+    const preferred = ['coal','name','SiO2','Al2O3','Fe2O3','CaO','MgO','Na2O','K2O','TiO2','SO3','P2O5','Mn3O4','Sulphur','GCV','cost','Transport ID','shipmentDate'];
+    const keys = [];
+    keys.push('Coal ID'); // visible first header
+
+    // Add preferred keys if present (preserve original presence check)
+    preferred.forEach(p => {
+        if (keySet.has(p) && !keys.includes(p)) {
+            keys.push(p);
+            keySet.delete(p);
+        }
+    });
+
+    // Add remaining keys (excluding internal and coalId/_id since we used Coal ID above)
+    Array.from(keySet).filter(k => k !== 'coalId' && k !== '_id' && k !== '__v').forEach(k => keys.push(k));
+
+    // final column is Select
+    keys.push('Select');
+
+    // ---------- BUILD HEADERS ----------
+    // Keep canonical keys for lookup
+    const dataKeys = keys.slice();
+
+    // Friendly label map (lookup by normalized-lowercase key)
+const headerLabelMap = {
+  'sulphur': 'Sulphur (S)',
+  's': 'Sulphur (S)',        // ADD THIS
+  'sulphurs': 'Sulphur (S)',// ADD THIS
+  'cost': 'Cost (INR/MT)',
+  'coal': 'Coal',
+  'gcv': 'GCV'
+};
+
+
+    // Build display labels (preserving oxide subscripts)
+    const displayLabels = dataKeys.map(k => {
+      if (k === 'Coal ID' || k === 'Select') return k;
+      const normLower = normalizeKey(k).toLowerCase().replace(/[^a-z]/g,'');
+      if (oxideSet.has(normalizeKey(k))) {
+        return labelWithSubscripts(k); // HTML string
+      }
+      return headerLabelMap[normLower] || k;
+    });
+
+    // Create header DOM nodes from displayLabels
+    displayLabels.forEach(lbl => {
+      const th = document.createElement('th');
+      if (String(lbl).indexOf('<sub>') !== -1) th.innerHTML = lbl;
+      else th.textContent = lbl;
+      headerRow.appendChild(th);
+    });
+
+    // ---------- RENDER ROWS ----------
+    // helper to get value for canonical key with fallbacks
+    function getValueForKey(row, key) {
+      if (!row) return undefined;
+      // direct property
+      if (Object.prototype.hasOwnProperty.call(row, key)) return row[key];
+
+      // compact (remove spaces) e.g. "Transport ID" -> "TransportID"
+      const compact = key.replace(/\s+/g, '');
+      if (Object.prototype.hasOwnProperty.call(row, compact)) return row[compact];
+
+      // normalized key forms
+      const keyNorm = normalizeKey(key);
+      if (Object.prototype.hasOwnProperty.call(row, keyNorm)) return row[keyNorm];
+      if (Object.prototype.hasOwnProperty.call(row, keyNorm.toLowerCase())) return row[keyNorm.toLowerCase()];
+      if (Object.prototype.hasOwnProperty.call(row, keyNorm.toUpperCase())) return row[keyNorm.toUpperCase()];
+
+      // common alias fallbacks
+      const keyLower = String(key).toLowerCase();
+
+      if (keyLower === 'coal' || keyLower === 'name' || keyLower === 'coal id') {
+        return row.coal || row.name || row.Coal || row['Coal'] || row.coalId || row['coalId'] || row['Coal ID'];
+      }
+
+      if (keyLower.indexOf('gcv') !== -1) {
+        return row.GCV || row.gcv || row['GCV'] || row['gcv'];
+      }
+
+      if (keyLower.indexOf('sulphur') !== -1 || keyLower === 's') {
+        return row['Sulphur (S)'] || row.Sulphur || row.SulphurS || row.S || row.sulphur || row.s;
+      }
+
+      if (keyLower.indexOf('cost') !== -1) {
+        return row.cost || row.Cost || row.price || row.Price;
+      }
+
+      // shipment/transport variants
+      if (keyLower.indexOf('transport') !== -1) {
+        return row['Transport ID'] || row.TransportID || row.transportId || row.transport;
+      }
+
+      if (keyLower.indexOf('date') !== -1) {
+        return row.shipmentDate || row.shipDate || row.date || row['shipmentDate'];
+      }
+
+      // fallback to undefined
+      return undefined;
+    }
+
+    data.forEach(row => {
+        const tr = document.createElement('tr');
+
+        // Coal ID cell (prefer coalId or _id)
+        const coalIdVal = (typeof getCoalIdFromRow === 'function') ? getCoalIdFromRow(row) : (row.coalId || row._id || '');
+        const tdId = document.createElement('td');
+        tdId.textContent = coalIdVal;
+        tr.appendChild(tdId);
+
+        // For each canonical data key (skip first 'Coal ID' and last 'Select')
+        for (let i = 1; i < dataKeys.length - 1; i++) {
+            const key = dataKeys[i];
+            const raw = getValueForKey(row, key);
+            const td = document.createElement('td');
+            td.textContent = formatCellValue(raw);
+            tr.appendChild(td);
+        }
+
+        // select checkbox column
+        const cbTd = document.createElement('td');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+
+        const primaryId = (row.coalId !== undefined && row.coalId !== null && String(row.coalId).trim() !== '') ? String(row.coalId) : (row._id ? String(row._id) : '');
+        if (primaryId) cb.setAttribute('data-id', primaryId);
+        else cb.setAttribute('data-id', '');
+
+        if (row._id) cb.setAttribute('data-oid', String(row._id));
+        try { cb.dataset.row = JSON.stringify(row); } catch(e) { cb.dataset.row = "{}"; }
+        cb.addEventListener('change', handleCheckboxChange);
+        cbTd.appendChild(cb);
+        tr.appendChild(cbTd);
+
+        tbody.appendChild(tr);
+    });
+
+    updateSelectionButtons();
+}
+
+
+
+
+    // ---------- file upload ----------
+    document.getElementById('btn-upload').addEventListener('click', function() {
+        const fi = document.getElementById('fileInput');
+        if (fi) fi.click();
+    });
+
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const fd = new FormData();
+        fd.append('file', file);
+
+        fetch('./upload-excel', { method:'POST', body: fd })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message || 'Upload finished');
+                fetchData();
+            })
+            .catch(err => {
+                console.error('upload err', err);
+                alert('Upload failed');
+            })
+            .finally(() => { e.target.value = ''; });
+    });
+
+    // ---------- download template ----------
+    document.getElementById('btn-download-template').addEventListener('click', function(){
+        window.location.href = "/download-template";
+    });
+
+    // ---------- selection / button enable logic ----------
+function updateSelectionButtons() {
+    // Keep current checked set
+    const checked = document.querySelectorAll('input[type="checkbox"]:checked');
+
+    const deleteBtn = document.getElementById('delete-selected-btn');
+    const downloadBtn = document.getElementById('download-selected-btn');
+    const editBtn = document.getElementById('edit-selected-btn');
+
+    const any = checked.length > 0;
+    if (deleteBtn) deleteBtn.disabled = !any;
+    if (downloadBtn) downloadBtn.disabled = !any;
+    if (editBtn) editBtn.disabled = !any;
+
+    // If something selected but latestSelectedId is null (e.g. after a re-render), set it to last checked
+    if (any && !latestSelectedId) {
+        const last = checked[checked.length - 1];
+        latestSelectedId = last ? last.getAttribute('data-id') : null;
+    }
+
+    // If nothing selected, clear latestSelectedId
+    if (!any) latestSelectedId = null;
+}
+
+
+    document.getElementById('delete-selected-btn').addEventListener('click', function(){
+        const checked = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'));
+        if (checked.length === 0) { alert('Select rows first'); return; }
+        if (!confirm('Are you sure you want to delete selected rows?')) return;
+        // collect primary ids (coalId preferred)
+        const ids = checked.map(cb => cb.getAttribute('data-id')).filter(Boolean);
+
+        fetch('./delete-data', {
+            method:'DELETE',
+            headers: { 'Content-Type':'application/json' },
+            body: JSON.stringify({ ids })
+        })
+        .then(r => r.json())
+        .then(resp => {
+            alert(resp.message || 'Deleted');
+            fetchData();
+        })
+        .catch(err => { console.error(err); alert('Delete failed'); });
+    });
+
+    // download dropdown toggle
+    function setupDownloadDropdown() {
+        const downloadBtn = document.getElementById('download-selected-btn');
+        const menu = document.getElementById('download-menu');
+        if (!downloadBtn || !menu) return;
+        downloadBtn.addEventListener('click', function(e){
+            e.stopPropagation();
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            menu.setAttribute('aria-hidden', menu.style.display === 'block' ? 'false' : 'true');
+        });
+        document.addEventListener('click', function(e){
+            if (!menu.contains(e.target) && e.target !== downloadBtn) {
+                menu.style.display = 'none';
+            }
+        });
+    }
+
+/* ===== START: Improved PDF generation using jsPDF + autoTable ===== */
+
+async function loadImageDataUrl(src) {
+  return new Promise((resolve, reject) => {
+    if (!src) return resolve(null);
+    const img = new Image();
+    img.crossOrigin = "anonymous"; // try to avoid tainting canvas
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const dataUrl = canvas.toDataURL('image/png');
+        resolve(dataUrl);
+      } catch (err) {
+        // fallback: resolve null so generator will use text-only header
+        console.warn('logo -> toDataURL failed', err);
+        resolve(null);
+      }
+    };
+    img.onerror = (e) => {
+      console.warn('logo load failed', e);
+      resolve(null);
+    };
+    img.src = src;
+  });
+}
+
+/**
+ * Create a clean, paginated PDF from an array of objects (rows).
+ * - rows: array of plain objects (each key is column)
+ * - filename: string
+ */
+async function generatePDFFromRows(rows, filename = 'abhitech-coal-data.pdf') {
+  if (!rows || rows.length === 0) {
+    alert('No rows to export');
+    return;
+  }
+
+  // derive columns (keep insertion order of keys from first row, plus union of others)
+  const keySet = new Set();
+  rows.forEach(r => {
+    Object.keys(r).forEach(k => {
+      if (k === '_id' || k === '__v') return;
+      keySet.add(k);
+    });
+  });
+
+  const keys = Array.from(keySet);
+  // If your UI expects "Coal ID" first, try to move obvious id fields to front:
+  const coalIdIdx = keys.findIndex(k => /coalid|coal id|coalId|coal/i.test(k));
+  if (coalIdIdx > 0) {
+    const [cid] = keys.splice(coalIdIdx, 1);
+    keys.unshift(cid);
+  }
+
+  // Build table body rows with formatted cell values
+  const body = rows.map(r => keys.map(k => formatCellValue(r[k])));
+
+  // Create PDF (landscape A4 for wide tables)
+  const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+
+  // Try to load logo as data URL (local path /images/abhitech-logo.png recommended)
+  const logoDataUrl = await loadImageDataUrl('./images/abhitech-logo.png');
+
+  const margin = { top: 60, left: 40, right: 40 };
+  let startY = margin.top;
+
+  // If logo exists, draw it top-left
+  if (logoDataUrl) {
+    // draw logo at 40pt from left, 18pt from top
+    const MAX_LOGO_HEIGHT = 40;
+    const img = new Image();
+    img.src = logoDataUrl;
+    await new Promise((res) => (img.onload = res));
+    // scale to max height while keeping aspect
+    const ratio = img.naturalWidth / img.naturalHeight || 1;
+    const logoH = MAX_LOGO_HEIGHT;
+    const logoW = logoH * ratio;
+    doc.addImage(logoDataUrl, 'PNG', margin.left, 18, logoW, logoH);
+  }
+
+  // Title centered (above table)
+  doc.setFontSize(14);
+  doc.setFont(undefined, 'bold');
+  const title = 'Abhitech Energycon Limited - Coal Data';
+  const pageWidth = doc.internal.pageSize.getWidth();
+  doc.text(title, pageWidth / 2, 36, { align: 'center' });
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+
+  // Use autoTable to render the table with automatic pagination
+  doc.autoTable({
+    head: [keys.map(k => String(k))],
+    body: body,
+    startY: startY,
+    margin: { left: margin.left, right: margin.right },
+    styles: {
+      fontSize: 9,
+      cellPadding: 6,
+      overflow: 'linebreak',
+      valign: 'middle'
+    },
+    headStyles: {
+      fillColor: [2, 18, 110], // dark blue header
+      textColor: 255,
+      halign: 'center'
+    },
+    didDrawPage: function (data) {
+      // add page footer with page number
+      const pageNumber = doc.internal.getNumberOfPages();
+      const footerText = `Page ${pageNumber}`;
+      const footerY = doc.internal.pageSize.getHeight() - 10;
+      doc.setFontSize(9);
+      doc.text(footerText, pageWidth - margin.right, footerY, { align: 'right' });
+    },
+    // allow autoTable to compute page breaks
+    theme: 'striped'
+  });
+
+  doc.save(filename);
+}
+
+/**
+ * Use the current DOM table (headers + visible columns order) to export PDF for the whole table.
+ */
+async function generatePDFFromTable(filename = 'abhitech-coal-data.pdf') {
+  const headerRow = document.getElementById('table-header');
+  const tbody = document.getElementById('table-body');
+  if (!headerRow || !tbody) {
+    alert('Table not found');
+    return;
+  }
+
+  // Extract header keys (skipping the final Select column)
+  const headerKeys = Array.from(headerRow.children).map(th => th.textContent);
+  // remove 'Select' if present as last column
+  if (headerKeys[headerKeys.length - 1] && /select/i.test(headerKeys[headerKeys.length - 1])) {
+    headerKeys.pop();
+  }
+
+  // Build rows in same visual order
+  const rows = [];
+  Array.from(tbody.children).forEach(tr => {
+    const cells = Array.from(tr.children);
+    // skip last cell which is checkbox column if present
+    const values = [];
+    for (let i = 0; i < headerKeys.length; i++) {
+      const td = cells[i];
+      values.push(td ? td.innerText.trim() : '');
+    }
+    // convert to object with header keys
+    const obj = {};
+    headerKeys.forEach((k, i) => obj[k] = values[i]);
+    rows.push(obj);
+  });
+
+  await generatePDFFromRows(rows, filename);
+}
+
+/* ===== Re-wire your existing downloadSelected and whole-page download handlers ===== */
+
+async function downloadSelected(format) {
+  const checked = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'));
+  if (checked.length === 0) { alert('Select rows first'); return; }
+
+  const rows = checked.map(cb => {
+    try { return JSON.parse(cb.dataset.row || "{}"); } catch(e) { return {}; }
+  });
+
+  if (format === 'excel') {
+    // keep your existing excel logic
+    const jsonData = rows.map(r => {
+      const obj = {};
+      Object.keys(r).forEach(k => {
+        if (k === '_id') return;
+        obj[k] = (r[k] === null || r[k] === undefined) ? "" : (typeof r[k] === 'number' ? r[k].toFixed(2) : r[k]);
+      });
+      return obj;
+    });
+    const ws = XLSX.utils.json_to_sheet(jsonData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Selected");
+    XLSX.writeFile(wb, "selected_rows.xlsx");
+  } else if (format === 'pdf') {
+    try {
+      await generatePDFFromRows(rows, 'selected_rows_abhitech.pdf');
+    } catch (err) {
+      console.error('autoTable PDF failed, falling back to image PDF', err);
+      // fallback: use the image approach you had (single-column text)
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF("l", "mm", "a4");
+      doc.setFontSize(10);
+      let y = 10;
+      rows.forEach((r, idx) => {
+        const line = Object.entries(r).filter(([k])=> k !== '_id').map(([k,v]) => `${k}: ${formatCellValue(v)}`).join('  |  ');
+        doc.text(`${idx+1}. ${line}`, 10, y);
+        y += 6;
+        if (y > doc.internal.pageSize.getHeight() - 10) { doc.addPage(); y = 10; }
+      });
+      doc.save('selected_rows.pdf');
+    }
+  }
+  const menu = document.getElementById('download-menu'); if (menu) menu.style.display = 'none';
+}
+
+// Whole page/table button now uses autoTable-based table export
+document.getElementById('downloadWholePDFBtn').addEventListener('click', async function(){
+  try {
+    await generatePDFFromTable('abhitech-coal-data.pdf');
+  } catch (err) {
+    console.error('generatePDFFromTable failed, falling back to html2canvas', err);
+    // fallback to your html2canvas code
+    const element = document.body;
+    window.scrollTo(0,0);
+    html2canvas(element, { scale: 2, useCORS: true, allowTaint: true }).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const { jsPDF } = window.jspdf || window;
+      const pdf = new jsPDF('p','mm','a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let position = 0;
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+
+      let heightLeft = imgHeight - pageHeight;
+      while (heightLeft > 0) {
+        position = -heightLeft;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save('Coal_Blending_Ratio.pdf');
+    }).catch(e=>{
+      console.error(e);
+      alert('Failed to create PDF of page. Try browser Print -> Save as PDF as last resort.');
+    });
+  }
+});
+/* ===== END: Improved PDF generation ===== */
+
+
+
+    // ---------- init ----------
+document.addEventListener('DOMContentLoaded', () => {
+    setupDownloadDropdown();
+    fetchData();
+
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            applySearchAndDisplay(e.target.value || '');
+        });
+    }
+    if (searchBtn) {
+        searchBtn.addEventListener('click', () => {
+            const q = (document.getElementById('searchInput')?.value || '');
+            applySearchAndDisplay(q);
+        });
+    }
+});
+
+
+    function logoutUser() { localStorage.setItem('isLoggedIn','false'); window.location.href='./login.html'; }
+</script>
+</body>
+
+<!-- ====== START: COMMON NAVBAR (paste into each HTML file, right after <body>) ====== -->
+<style>
+/* Common navbar override (will replace previous styles visually) */
+:root{
+  --nav-h: 90px;
+  --nav-bg-start: rgba(255,255,255,0.96);
+  --nav-bg-end: rgba(245,247,255,0.88);
+  --nav-blue-1: #02126e;
+  --nav-blue-2: #0027a7;
+  --nav-text: #071a52;
+  --nav-btn-radius: 999px;
+}
+
+/* Strongly scoped to override older rules */
+.common-navbar-wrapper { position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); z-index: 1300; }
+.common-navbar {
+  box-sizing: border-box;
+  height: 100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 8px 20px;
+  background: linear-gradient(180deg, var(--nav-bg-start), var(--nav-bg-end));
+  box-shadow: 0 8px 30px rgba(9,20,46,0.06);
+  border-bottom: 1px solid rgba(2,18,110,0.04);
+  backdrop-filter: blur(4px) saturate(1.02);
+  font-family: Inter, Arial, Helvetica, sans-serif;
+}
+
+/* Left: logo + title */
+.common-navbar .brand { display:flex; align-items:center; gap:12px; }
+.common-navbar .brand img { height:46px; width:auto; object-fit:contain; display:block; }
+.common-navbar .brand .title { font-weight:700; color:var(--nav-text); font-size:18px; margin:0; }
+
+/* Center/right: nav buttons */
+.common-navbar .nav-buttons { display:flex; gap:10px; align-items:center; margin-left:12px; }
+.common-navbar .nav-buttons button{
+  padding:8px 14px;
+  border-radius:var(--nav-btn-radius);
+  border: none;
+  font-weight:600;
+  cursor:pointer;
+  background: linear-gradient(180deg,var(--nav-blue-1),var(--nav-blue-2));
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(2,18,110,0.07);
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s;
+}
+.common-navbar .nav-buttons button:hover{ transform: translateY(-2px); }
+.common-navbar .nav-buttons button.logout-btn{
+  background: linear-gradient(180deg,#ff4b4b,#e32d2d) !important;
+  box-shadow: 0 8px 20px rgba(227,45,45,0.07);
+}
+
+/* Active page visual (different contrast + subtle outline) */
+.common-navbar .nav-buttons button.active {
+  background: linear-gradient(180deg,#ffffff, #f1f6ff) !important;
+  color: var(--nav-blue-2) !important;
+  box-shadow: 0 6px 18px rgba(2,18,110,0.06) !important;
+  border: 1px solid rgba(2,18,110,0.12);
+  transform: translateY(-1px) !important;
+}
+
+/* Mobile: make buttons smaller/wrapping */
+@media (max-width: 720px) {
+  .common-navbar { padding:10px 14px; }
+  .common-navbar .brand .title { font-size:15px; }
+  .common-navbar .nav-buttons { gap:6px; }
+  .common-navbar .nav-buttons button { padding:7px 10px; font-size:13px; }
+}
+
+/* push page content below navbar (only added if page doesn't already do it) */
+html body { --navbar-height: var(--nav-h); }
+</style>
+
+<div class="common-navbar-wrapper" role="navigation" aria-label="Main navigation">
+  <nav class="common-navbar">
+    <div class="brand" aria-hidden="false">
+      <img src="./images/abhitech-logo.png" alt="Abhitech logo">
+      <h1 class="title">Combustion Analyzer</h1>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div class="nav-buttons" role="menubar" aria-label="Primary">
+        <button data-target="coal_table.html" title="Coal Properties">Coal Properties</button>
+        <button data-target="slagging_coal_page.html" title="Calculation">Calculation</button>
+        <button data-target="model.html" title="Model">Model</button>
+        <button data-target="date.html" title="About">Date Wise Analysis</button>
+      </div>
+
+      <div style="width:8px;"></div>
+
+      <div class="nav-buttons" aria-hidden="false">
+        <button class="logout-btn" id="common-logout-btn" title="Logout">Logout</button>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<script>
+(function(){
+  const navBtns = Array.from(document.querySelectorAll('.common-navbar .nav-buttons button'))
+    .filter(b => b.dataset && b.dataset.target);
+
+  const path = (location.pathname || '').split('/').pop().toLowerCase();
+  let matched = false;
+  navBtns.forEach(btn => {
+    const target = (btn.dataset.target || '').toLowerCase();
+    btn.addEventListener('click', () => { if (target) location.href = target; });
+    if ((path && path === target) || (!path && target === 'model.html')) {
+      btn.classList.add('active');
+      matched = true;
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  if (!matched) {
+    const pageHints = ['coal', 'slag', 'model'];
+    for (const btn of navBtns) {
+      const t = btn.dataset.target || '';
+      for (const h of pageHints) {
+        if (t.indexOf(h) !== -1 && document.body.innerText.toLowerCase().includes(h)) {
+          btn.classList.add('active'); matched = true; break;
+        }
+      }
+      if (matched) break;
+    }
+  }
+
+  const logoutBtn = document.getElementById('common-logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      try { localStorage.setItem('isLoggedIn','false'); } catch(e) {}
+      window.location.href = './login.html';
+    });
+  }
+})();
+
+/* ======= COAL DROPDOWN (body-attached, keyboard, robust) ======= */
+(function coalDropdownV3(){
+  if (window.__coalDropdownV3_installed) return;
+  window.__coalDropdownV3_installed = true;
+
+  const RETRY_INTERVAL = 180;
+  const MAX_RETRIES = 120;
+  let tries = 0;
+
+  let headerTh = null;
+  let coalColIndex = null;
+  let dropdownEl = null;
+  let inputEl = null;
+  let listEl = null;
+  let coalNames = [];
+  let activeIndex = -1;
+  let isOpen = false;
+
+  function findCoalHeader() {
+    const header = document.getElementById('table-header');
+    if (!header) return null;
+    const ths = Array.from(header.querySelectorAll('th'));
+    if (!ths.length) return null;
+    // Prefer exact 'coal' (lowercase), otherwise include 'coal' but not 'coal id'
+    for (let i = 0; i < ths.length; i++) {
+      const t = (ths[i].innerText || ths[i].textContent || '').trim().toLowerCase();
+      if (t === 'coal') return { th: ths[i], idx: i };
+    }
+    for (let i = 0; i < ths.length; i++) {
+      const t = (ths[i].innerText || ths[i].textContent || '').trim().toLowerCase();
+      if (t.includes('coal') && !t.includes('coal id')) return { th: ths[i], idx: i };
+    }
+    // fallback to second column if present (you indicated coal is index 1)
+    if (ths.length > 1) return { th: ths[1], idx: 1 };
+    return null;
+  }
+
+  function collectCoalNamesFromCachedOrDOM() {
+    // prefer cachedData if available
+    if (Array.isArray(window.cachedData) && window.cachedData.length) {
+      const names = window.cachedData.map(r => (r.coal || r.Coal || r.name || '') + '');
+      const uniq = Array.from(new Set(names.map(s => s.trim()).filter(Boolean)));
+      return uniq;
+    }
+    // fallback: read from visible table DOM
+    const tbody = document.getElementById('table-body');
+    if (tbody) {
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const names = rows.map(tr => {
+        const cells = Array.from(tr.children);
+        // coalColIndex might be offset by the 'Coal ID' sticky first column: in your table display, header shows 'Coal ID' as first column.
+        // We are using coalColIndex to refer to header index; if header has 'Coal ID' at 0 and 'coal' at 1, this will match table cells ordering.
+        const cell = cells[coalColIndex] || cells[coalColIndex]; // best effort
+        return cell ? (cell.innerText || '').trim() : '';
+      });
+      return Array.from(new Set(names.filter(Boolean)));
+    }
+    return [];
+  }
+
+  function ensureDropdown() {
+    if (dropdownEl) return;
+    dropdownEl = document.createElement('div');
+    dropdownEl.className = 'coal-dropdown-body';
+    dropdownEl.style.display = 'none';
+    dropdownEl.innerHTML = `
+      <div class="cd-box">
+        <input class="cd-input" type="text" autocomplete="off" placeholder="Type to filter coals..." aria-label="Coal filter">
+        <ul class="cd-list" role="listbox"></ul>
+      </div>
+    `;
+    document.body.appendChild(dropdownEl);
+    inputEl = dropdownEl.querySelector('.cd-input');
+    listEl = dropdownEl.querySelector('.cd-list');
+
+    // keyboard navigation
+    inputEl.addEventListener('keydown', (ev) => {
+      const items = Array.from(listEl.querySelectorAll('.cd-item:not(.disabled)'));
+      if (!items.length) return;
+      if (ev.key === 'ArrowDown') {
+        ev.preventDefault();
+        setActive((activeIndex + 1) % items.length);
+      } else if (ev.key === 'ArrowUp') {
+        ev.preventDefault();
+        setActive(activeIndex <= 0 ? items.length - 1 : activeIndex - 1);
+      } else if (ev.key === 'Enter') {
+        ev.preventDefault();
+        if (activeIndex >= 0 && items[activeIndex]) items[activeIndex].click();
+        else if (items[0]) items[0].click();
+      } else if (ev.key === 'Escape') {
+        ev.preventDefault();
+        hideDropdown();
+      }
+    });
+
+    // input filter
+    inputEl.addEventListener('input', () => renderList(inputEl.value || ''));
+
+    // click outside
+    document.addEventListener('click', (e) => {
+      if (!dropdownEl) return;
+      if (!dropdownEl.contains(e.target) && headerTh && !headerTh.contains(e.target)) {
+        hideDropdown();
+      }
+    });
+
+    // reposition on scroll/resize
+    window.addEventListener('scroll', () => {
+      if (isOpen) positionDropdown();
+    }, { passive: true });
+    window.addEventListener('resize', () => {
+      if (isOpen) positionDropdown();
+    });
+  }
+
+  function openDropdown() {
+    coalNames = collectCoalNamesFromCachedOrDOM();
+    if (!coalNames.length) {
+      // still no data, show a message
+      coalNames = [];
+    }
+    ensureDropdown();
+    renderList(''); // show all
+    positionDropdown();
+    dropdownEl.style.display = 'block';
+    isOpen = true;
+    inputEl.value = '';
+    inputEl.focus();
+  }
+
+  function hideDropdown() {
+    if (!dropdownEl) return;
+    dropdownEl.style.display = 'none';
+    activeIndex = -1;
+    isOpen = false;
+  }
+
+  function toggleDropdown() {
+    if (isOpen) hideDropdown(); else openDropdown();
+  }
+
+  function positionDropdown() {
+    if (!headerTh || !dropdownEl) return;
+    const rect = headerTh.getBoundingClientRect();
+    const left = Math.max(6, rect.left + window.scrollX);
+    const top = rect.bottom + window.scrollY + 6;
+    dropdownEl.style.left = `${left}px`;
+    // width - try to align with header width but allow a min width
+    const width = Math.max(240, rect.width);
+    dropdownEl.style.width = `${width}px`;
+    dropdownEl.style.top = `${top}px`;
+  }
+
+  function renderList(filter) {
+    if (!listEl) return;
+    const q = (filter || '').toLowerCase().trim();
+    listEl.innerHTML = '';
+    activeIndex = -1;
+
+    if (!coalNames.length) {
+      const li = document.createElement('li');
+      li.className = 'cd-item disabled';
+      li.textContent = 'No coal names available';
+      listEl.appendChild(li);
+      return;
+    }
+
+    // startsWith first then contains
+    const starts = coalNames.filter(n => n.toLowerCase().startsWith(q));
+    const contains = coalNames.filter(n => !n.toLowerCase().startsWith(q) && n.toLowerCase().includes(q));
+    const items = q ? starts.concat(contains) : coalNames.slice();
+
+    if (!items.length) {
+      const li = document.createElement('li');
+      li.className = 'cd-item disabled';
+      li.textContent = 'No matches';
+      listEl.appendChild(li);
+      return;
+    }
+
+    items.forEach((name, i) => {
+      const li = document.createElement('li');
+      li.className = 'cd-item';
+      li.setAttribute('role','option');
+      li.textContent = name;
+      li.tabIndex = -1;
+
+      li.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        applySelection(name);
+      });
+
+      li.addEventListener('mouseenter', () => setActive(i));
+      listEl.appendChild(li);
+    });
+  }
+
+  function setActive(i) {
+    const items = Array.from(listEl.querySelectorAll('.cd-item'));
+    items.forEach(it => it.classList.remove('active'));
+    if (i >= 0 && items[i]) {
+      items[i].classList.add('active');
+      items[i].scrollIntoView({ block: 'nearest' });
+      activeIndex = i;
+    }
+  }
+
+  function applySelection(name) {
+    // set the search input and apply the same filter
+    const search = document.getElementById('searchInput');
+    if (search) search.value = name;
+    if (typeof window.applySearchAndDisplay === 'function') {
+      try {
+        applySearchAndDisplay(name);
+      } catch (err) {
+        console.error('applySearchAndDisplay failed', err);
+      }
+    }
+    hideDropdown();
+  }
+
+  function attachHeaderListener() {
+    if (!headerTh) return;
+    // ensure we don't add duplicates
+    if (headerTh.dataset.__coalDropdownClickAttached) return;
+    headerTh.dataset.__coalDropdownClickAttached = '1';
+
+    // Clicking header toggles dropdown. If the click lands on the input inside dropdown, ignore.
+    headerTh.addEventListener('click', (e) => {
+      // If the click occurs inside the dropdown already (rare), let it through
+      if (dropdownEl && dropdownEl.contains(e.target)) return;
+      toggleDropdown();
+    });
+  }
+
+  function initOnceReady() {
+    const found = findCoalHeader();
+    if (!found) {
+      if (++tries > MAX_RETRIES) {
+        console.error('coal dropdown init: header not found');
+        return;
+      }
+      return setTimeout(initOnceReady, RETRY_INTERVAL);
+    }
+    headerTh = found.th;
+    coalColIndex = found.idx;
+    ensureDropdown();
+    attachHeaderListener();
+
+    // update coalNames when cachedData updates - monkey patch fetchData callback if possible
+    // Easiest approach: poll cachedData occasionally to refresh names while dropdown is closed
+    let prevLen = (Array.isArray(window.cachedData) ? window.cachedData.length : 0);
+    setInterval(() => {
+      const curLen = (Array.isArray(window.cachedData) ? window.cachedData.length : 0);
+      if (curLen !== prevLen) {
+        prevLen = curLen;
+        coalNames = collectCoalNamesFromCachedOrDOM();
+        // If dropdown is open, re-render
+        if (isOpen) renderList(inputEl.value || '');
+      }
+    }, 800);
+
+    console.log('coal dropdown ready, header text:', (headerTh.innerText || headerTh.textContent).trim());
+  }
+
+  // run
+  // ---- Observe header changes and reattach ----
+
+let headerObserver = null;
+
+function observeHeader() {
+
+  const header = document.getElementById('table-header');
+  if (!header) {
+    setTimeout(observeHeader, 300);
+    return;
+  }
+
+  if (headerObserver) return;
+
+  headerObserver = new MutationObserver(() => {
+    tries = 0;
+    headerTh = null;
+    coalColIndex = null;
+    initOnceReady();
+  });
+
+  headerObserver.observe(header, {
+    childList: true,
+    subtree: true
+  });
+}
+
+// start
+observeHeader();
+initOnceReady();
+
+
+})();
+
+</script>
+<!-- ====== END: COMMON NAVBAR ====== -->
+
+</html>
